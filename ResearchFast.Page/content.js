@@ -228,8 +228,9 @@ function score(items, query, filters) {
   let kept = items.filter(it => {
     const t = norm(it.title);
     if (bans.some(b => t.includes(b))) return false;
-    if (filters.maxPrice && it.price != null && it.price > filters.maxPrice) return false;
     if (filters.minPrice && it.price != null && it.price < filters.minPrice) return false;
+    /* le budget maximum n'est PAS applique ici : il est reglable en direct
+       au curseur, sans avoir a rescanner la page. */
     if (filters.minRating && (it.rating || 0) < filters.minRating) return false;
     if (filters.noSponsored && it.note === 'sponsorisé') return false;
     return true;
@@ -276,7 +277,34 @@ function score(items, query, filters) {
 /* ============================================================
    Le panneau
    ============================================================ */
-let panel = null, state = { items: [], query: '', sort: 'score' };
+/* mêmes paliers que dans le popup : fins en bas, larges en haut, puis "sans limite" */
+const STOPS = (function () {
+  const s = [];
+  for (let v = 5;    v < 50;    v += 5)   s.push(v);
+  for (let v = 50;   v < 200;   v += 10)  s.push(v);
+  for (let v = 200;  v < 500;   v += 25)  s.push(v);
+  for (let v = 500;  v < 1000;  v += 50)  s.push(v);
+  for (let v = 1000; v <= 5000; v += 250) s.push(v);
+  s.push(null);
+  return s;
+})();
+const LAST = STOPS.length - 1;
+
+function stopIndex(value) {
+  if (value == null) return LAST;
+  let best = 0;
+  for (let i = 0; i < LAST; i++) if (Math.abs(STOPS[i] - value) < Math.abs(STOPS[best] - value)) best = i;
+  return best;
+}
+
+let panel = null;
+let state = { all: [], query: '', sort: 'score', budget: null };
+
+/* les annonces qui rentrent dans le budget courant */
+function visible() {
+  const b = state.budget;
+  return state.all.filter(it => b == null || (it.price != null && it.price <= b));
+}
 
 function el(tag, cls, text) {
   const n = document.createElement(tag);
@@ -301,6 +329,27 @@ function buildPanel() {
   head.append(brand, close);
 
   const q = el('div', 'rfp-query', state.query ? '« ' + state.query + ' »' : 'Toutes les annonces');
+
+  /* --- curseur de budget --- */
+  const bud = el('div', 'rfp-budget');
+  const bTop = el('div', 'rfp-budget-top');
+  const bVal = el('span', 'rfp-budget-val');
+  bTop.append(el('span', 'rfp-budget-lbl', 'Budget max'), bVal);
+
+  const range = document.createElement('input');
+  range.type = 'range';
+  range.className = 'rfp-range';
+  range.min = 0;
+  range.max = LAST;
+  range.step = 1;
+  range.value = stopIndex(state.budget);
+  range.addEventListener('input', () => {
+    state.budget = STOPS[Number(range.value)];
+    paintBudget();
+    renderList();
+    saveBudget();
+  });
+  bud.append(bTop, range);
 
   /* --- barre de tri --- */
   const bar = el('div', 'rfp-bar');
@@ -327,30 +376,66 @@ function buildPanel() {
   more.addEventListener('click', loadMore);
   foot.append(again, more);
 
-  panel.append(head, q, bar, list, foot);
+  panel.append(head, q, bud, bar, list, foot);
   document.body.appendChild(panel);
 
   panel._count = count;
   panel._list = list;
+  panel._range = range;
+  panel._bval = bVal;
+  paintBudget();
+}
+
+function paintBudget() {
+  if (!panel) return;
+  const b = state.budget;
+  panel._bval.textContent = b == null ? 'sans limite' : b.toLocaleString('fr-CA') + ' $';
+  panel._bval.classList.toggle('is-open', b == null);
+  panel._range.style.setProperty('--fill', Math.round((panel._range.value / LAST) * 100) + '%');
+}
+
+/* le budget suit dans le popup, et inversement */
+function saveBudget() {
+  clearTimeout(saveBudget.t);
+  saveBudget.t = setTimeout(() => {
+    chrome.storage.local.get({ filters: {} }, r => {
+      const f = r.filters || {};
+      f.maxPrice = state.budget;
+      chrome.storage.local.set({ filters: f });
+    });
+  }, 250);
 }
 
 function renderList() {
   const list = panel._list;
   list.textContent = '';
 
-  const items = state.items.slice();
+  const items = visible();
   if (state.sort === 'price') items.sort((a, b) => (a.price == null) - (b.price == null) || a.price - b.price);
   if (state.sort === 'rating') items.sort((a, b) => (b.rating || 0) - (a.rating || 0));
   if (state.sort === 'title') items.sort((a, b) => a.title.localeCompare(b.title));
 
-  panel._count.textContent = items.length + (items.length > 1 ? ' offres' : ' offre');
+  panel._count.textContent = items.length + (items.length > 1 ? ' offres' : ' offre')
+    + (state.budget != null && items.length < state.all.length
+        ? ' sur ' + state.all.length : '');
 
   if (!items.length) {
     const empty = el('div', 'rfp-empty');
-    empty.append(
-      el('div', 'rfp-empty-icon', '🤷'),
-      el('div', null, 'Rien trouvé sur cette page.'),
-      el('div', 'rfp-empty-sub', 'Lance une recherche sur le site, puis rescanne.'));
+    const cheap = state.all.filter(it => it.price != null).sort((a, b) => a.price - b.price)[0];
+
+    if (state.all.length && state.budget != null) {
+      empty.append(
+        el('div', 'rfp-empty-icon', '💸'),
+        el('div', null, 'Rien sous ' + state.budget.toLocaleString('fr-CA') + ' $.'),
+        el('div', 'rfp-empty-sub', cheap
+          ? 'Le moins cher ici est à ' + Math.round(cheap.price).toLocaleString('fr-CA') + ' $.'
+          : 'Remonte le curseur.'));
+    } else {
+      empty.append(
+        el('div', 'rfp-empty-icon', '🤷'),
+        el('div', null, 'Rien trouvé sur cette page.'),
+        el('div', 'rfp-empty-sub', 'Lance une recherche sur le site, puis rescanne.'));
+    }
     list.appendChild(empty);
     return;
   }
@@ -426,24 +511,26 @@ function run(silent) {
       try { raw = SITES[SITES.length - 1].parse() || []; } catch (e) { raw = []; }
     }
 
+    const filters = cfg.filters || {};
     state.query = cfg.query || '';
-    state.items = score(raw, state.query, cfg.filters || {});
+    state.budget = filters.maxPrice != null ? filters.maxPrice : null;
+    state.all = score(raw, state.query, filters);
 
+    /* on enregistre la liste complete, pas celle filtree par le budget :
+       le curseur du popup doit pouvoir la reparcourir sans rescanner. */
     const results = cfg.results || {};
     results[SITE.id] = {
       site: SITE.name,
       url: location.href,
       when: Date.now(),
-      items: state.items.slice(0, 25)
+      items: state.all.slice(0, 40)
     };
     chrome.storage.local.set({ results, pending: false });
 
     buildPanel();
     renderList();
 
-    if (!silent) {
-      if (!state.items.length) toast('Aucune annonce reconnue ici.');
-    }
+    if (!silent && !state.all.length) toast('Aucune annonce reconnue ici.');
   });
 }
 
@@ -461,6 +548,18 @@ function launcher() {
 chrome.storage.local.get({ query: '', pending: false }, cfg => {
   if (cfg.pending && cfg.query) setTimeout(() => run(true), SITE.delay);
   else launcher();
+});
+
+/* si le budget est bouge depuis le popup, le panneau suit */
+chrome.storage.onChanged.addListener(ch => {
+  if (!ch.filters || !panel) return;
+  const max = (ch.filters.newValue || {}).maxPrice;
+  const value = max != null ? max : null;
+  if (value === state.budget) return;
+  state.budget = value;
+  panel._range.value = stopIndex(value);
+  paintBudget();
+  renderList();
 });
 
 chrome.runtime.onMessage.addListener((msg, sender, respond) => {

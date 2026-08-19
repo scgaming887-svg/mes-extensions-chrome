@@ -27,6 +27,29 @@ const SEARCH = {
   }
 };
 
+/* Paliers du curseur : fins sur les petits prix, larges ensuite,
+   et une derniere position "sans limite". */
+const STOPS = (function () {
+  const s = [];
+  for (let v = 5;    v < 50;    v += 5)   s.push(v);
+  for (let v = 50;   v < 200;   v += 10)  s.push(v);
+  for (let v = 200;  v < 500;   v += 25)  s.push(v);
+  for (let v = 500;  v < 1000;  v += 50)  s.push(v);
+  for (let v = 1000; v <= 5000; v += 250) s.push(v);
+  s.push(null);
+  return s;
+})();
+const LAST = STOPS.length - 1;
+
+const stopIndex = value => {
+  if (value == null) return LAST;
+  let best = 0;
+  for (let i = 0; i < LAST; i++) if (Math.abs(STOPS[i] - value) < Math.abs(STOPS[best] - value)) best = i;
+  return best;
+};
+
+const euros = v => v.toLocaleString('fr-CA') + ' $';
+
 let cfg = JSON.parse(JSON.stringify(DEFAULTS));
 let tabId = null;
 
@@ -58,16 +81,52 @@ function renderSites() {
   });
 }
 
+/* ---------- curseur de budget ---------- */
+function renderBudget() {
+  const slider = document.getElementById('budget');
+  const val = document.getElementById('budget-val');
+  const hint = document.getElementById('budget-hint');
+  const max = cfg.filters.maxPrice;
+
+  val.textContent = max == null ? 'sans limite' : euros(max);
+  val.className = 'budget-val' + (max == null ? ' no-limit' : '');
+  slider.style.setProperty('--fill', Math.round((slider.value / LAST) * 100) + '%');
+
+  const all = merged();
+  if (!all.length) {
+    hint.textContent = 'Glisse pour ne garder que ce qui rentre dans ton budget.';
+    return;
+  }
+
+  const inBudget = all.filter(it => max == null || (it.price != null && it.price <= max));
+  hint.textContent = '';
+
+  if (!inBudget.length) {
+    const cheapest = all.filter(it => it.price != null).sort((a, b) => a.price - b.price)[0];
+    const s = document.createElement('span');
+    s.className = 'none';
+    s.textContent = 'Rien sous ' + euros(max) + '.';
+    hint.append(s);
+    if (cheapest) hint.append(' Le moins cher est à ' + euros(Math.round(cheapest.price)) + '.');
+    return;
+  }
+
+  const b = document.createElement('b');
+  b.textContent = inBudget.length + (inBudget.length > 1 ? ' offres' : ' offre');
+  hint.append(b, max == null ? ' au total.' : ' dans ton budget.');
+}
+
 function fillForm() {
   document.getElementById('query').value = cfg.query;
+  document.getElementById('budget').value = stopIndex(cfg.filters.maxPrice);
   document.getElementById('minPrice').value = cfg.filters.minPrice != null ? cfg.filters.minPrice : '';
-  document.getElementById('maxPrice').value = cfg.filters.maxPrice != null ? cfg.filters.maxPrice : '';
   document.getElementById('minRating').value = cfg.filters.minRating || 0;
   document.getElementById('exclude').value = cfg.filters.exclude || '';
   document.getElementById('noSponsored').checked = !!cfg.filters.noSponsored;
   document.getElementById('region').value = cfg.region;
   renderSites();
   renderResults();
+  renderBudget();
 }
 
 function readForm() {
@@ -79,7 +138,7 @@ function readForm() {
   cfg.region = document.getElementById('region').value;
   cfg.filters = {
     minPrice: num('minPrice'),
-    maxPrice: num('maxPrice'),
+    maxPrice: STOPS[Number(document.getElementById('budget').value)],
     minRating: Number(document.getElementById('minRating').value),
     exclude: document.getElementById('exclude').value.trim(),
     noSponsored: document.getElementById('noSponsored').checked
@@ -106,15 +165,25 @@ function merged() {
 function renderResults() {
   const box = document.getElementById('best');
   box.textContent = '';
-  const items = merged();
+
+  const max = cfg.filters.maxPrice;
+  const items = merged().filter(it => max == null || (it.price != null && it.price <= max));
 
   if (!items.length) {
+    const scanned = merged().length;
     const e = document.createElement('div');
     e.className = 'empty';
     const b = document.createElement('b');
-    b.textContent = 'Aucun scan pour l\'instant';
     const p = document.createElement('div');
-    p.textContent = 'Tape ce que tu cherches, choisis les sites, puis lance la recherche.';
+
+    if (scanned) {
+      b.textContent = 'Rien dans ce budget';
+      p.textContent = scanned + ' offres trouvées, mais toutes au-dessus de '
+                    + euros(max) + '. Remonte le curseur.';
+    } else {
+      b.textContent = 'Aucun scan pour l\'instant';
+      p.textContent = 'Tape ce que tu cherches, choisis les sites, puis lance la recherche.';
+    }
     e.append(b, p);
     box.appendChild(e);
     return;
@@ -229,14 +298,14 @@ document.getElementById('clear').addEventListener('click', () => {
   renderResults();
 });
 
-document.addEventListener('input', save);
+document.addEventListener('input', () => { save(); renderBudget(); renderResults(); });
 
 document.getElementById('query').addEventListener('keydown', e => {
   if (e.key === 'Enter') document.getElementById('go').click();
 });
 
 chrome.storage.onChanged.addListener(ch => {
-  if (ch.results) { cfg.results = ch.results.newValue || {}; renderResults(); }
+  if (ch.results) { cfg.results = ch.results.newValue || {}; renderResults(); renderBudget(); }
 });
 
 /* ============================================================

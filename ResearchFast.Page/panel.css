@@ -171,3 +171,30 @@
   box-shadow: 0 10px 30px rgba(0, 0, 0, .45) !important;
   font: 600 12.5px "Segoe UI", system-ui, sans-serif !important; color: #eef0f7 !important;
 }
+
+/* ---- curseur de budget ---- */
+#rfp-panel .rfp-budget { padding: 10px 14px 4px !important; }
+#rfp-panel .rfp-budget-top {
+  display: flex !important; align-items: baseline !important;
+  justify-content: space-between !important; margin-bottom: 7px !important;
+}
+#rfp-panel .rfp-budget-lbl { font-size: 11.5px !important; color: #8a93ab !important; }
+#rfp-panel .rfp-budget-val {
+  font-size: 14px !important; font-weight: 800 !important; color: #00d2a8 !important;
+}
+#rfp-panel .rfp-budget-val.is-open {
+  font-size: 11.5px !important; font-weight: 600 !important; color: #8a93ab !important;
+}
+#rfp-panel .rfp-range {
+  width: 100% !important; height: 4px !important;
+  -webkit-appearance: none !important; appearance: none !important;
+  background: linear-gradient(90deg, #00d2a8 0%, #00d2a8 var(--fill, 100%),
+                              #262c3c var(--fill, 100%), #262c3c 100%) !important;
+  border-radius: 4px !important; cursor: pointer !important; padding: 0 !important;
+}
+#rfp-panel .rfp-range::-webkit-slider-thumb {
+  -webkit-appearance: none !important;
+  width: 16px !important; height: 16px !important; border-radius: 50% !important;
+  background: #00d2a8 !important; border: 3px solid #141720 !important;
+  box-shadow: 0 0 0 1px #00d2a8 !important; cursor: pointer !important;
+}

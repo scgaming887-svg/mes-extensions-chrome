@@ -73,7 +73,8 @@ Trouve la meilleure offre pour ce que tu cherches.
 - Tape ton article : l'extension ouvre la recherche sur Amazon, eBay et Marketplace d'un coup
 - Elle lit la page de résultats, en extrait titre, prix, note et nombre d'avis
 - Elle classe les annonces sur 100 en croisant **pertinence, prix, note et fiabilité**
-- Filtres : prix mini/maxi, note minimale, mots à exclure, masquer les sponsorisés
+- **Curseur de budget** : glisse pour fixer ton prix max, les résultats se refiltrent instantanément — sans rescanner. Il est présent dans le popup comme dans le panneau, et les deux restent synchronisés
+- Filtres : prix minimum, note minimale, mots à exclure, masquer les sponsorisés
 - Écarte les accessoires : chercher « casque bluetooth » ne remonte pas les étuis pour casque
 - Panneau classé directement sur la page, et top 12 tous sites confondus dans le popup
 - Fonctionne aussi en mode générique sur les autres boutiques

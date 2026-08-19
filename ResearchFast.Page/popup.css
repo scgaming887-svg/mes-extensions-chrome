@@ -128,3 +128,30 @@ h2 { font-size: 10.5px; text-transform: uppercase; letter-spacing: .7px; color: 
   background: var(--surface); border: 1px dashed var(--line); border-radius: 11px;
 }
 .empty b { display: block; margin-bottom: 4px; color: var(--text); font-size: 13px; }
+
+/* ---- curseur de budget ---- */
+.budget {
+  margin-bottom: 12px; padding: 11px 12px 9px;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 11px;
+}
+.budget-top { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 8px; }
+.budget-top .lbl { margin: 0; }
+.budget-val { font-size: 15px; font-weight: 800; color: var(--accent); }
+.budget-val.no-limit { font-size: 12.5px; font-weight: 600; color: var(--muted); }
+
+input[type=range] {
+  width: 100%; height: 4px; -webkit-appearance: none; appearance: none;
+  background: linear-gradient(90deg, var(--accent) 0%, var(--accent) var(--fill, 100%),
+                              var(--surface-2) var(--fill, 100%), var(--surface-2) 100%);
+  border-radius: 4px; cursor: pointer;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 17px; height: 17px; border-radius: 50%;
+  background: var(--accent); border: 3px solid var(--bg); cursor: pointer;
+  box-shadow: 0 0 0 1px var(--accent);
+}
+input[type=range]:active::-webkit-slider-thumb { transform: scale(1.12); }
+
+.budget-hint { margin-top: 8px; font-size: 10.5px; color: var(--muted); }
+.budget-hint b { color: var(--text); }
+.budget-hint .none { color: #ff8a8a; }

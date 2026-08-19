@@ -16,6 +16,15 @@
       <input type="text" id="query" placeholder="casque bluetooth sans fil" autofocus>
     </label>
 
+    <div class="budget">
+      <div class="budget-top">
+        <span class="lbl">Budget maximum</span>
+        <span class="budget-val" id="budget-val">sans limite</span>
+      </div>
+      <input type="range" id="budget" min="0" max="63" step="1" value="63">
+      <div class="budget-hint" id="budget-hint">Glisse pour ne garder que ce qui rentre dans ton budget.</div>
+    </div>
+
     <div class="sites" id="sites"></div>
 
     <button id="go" class="btn-go">Chercher et scanner</button>
@@ -29,10 +38,6 @@
       <label class="field small">
         <span class="lbl">Prix min</span>
         <input type="number" id="minPrice" placeholder="0" min="0">
-      </label>
-      <label class="field small">
-        <span class="lbl">Prix max</span>
-        <input type="number" id="maxPrice" placeholder="—" min="0">
       </label>
       <label class="field small">
         <span class="lbl">Note mini</span>
