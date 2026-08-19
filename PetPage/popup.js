@@ -130,7 +130,9 @@ function flash(text) {
   flash.t = setTimeout(() => { el.textContent = ''; }, 2200);
 }
 
-function send(msg, okText, onOk) {
+/* Une reponse sans "handled" vient d'une ancienne version du script :
+   elle repond OK sans rien faire. On la traite comme un echec. */
+function send(msg, okText, onOk, retried) {
   if (tabId === null) { flash('Impossible sur cette page.'); return; }
 
   chrome.tabs.sendMessage(tabId, msg, res => {
@@ -139,10 +141,15 @@ function send(msg, okText, onOk) {
       revive(msg, okText, onOk);
       return;
     }
+    if (res && res.ok && !res.handled) {
+      if (!retried) revive(msg, okText, onOk, true);
+      else flash('Ancienne version sur la page : recharge-la (F5).');
+      return;
+    }
     if (!res || !res.ok) {
-      flash(res && res.reason === 'off'
-        ? 'Il est desactive sur ce site.'
-        : 'Recharge la page (F5) puis reessaie.');
+      if (res && res.reason === 'off') flash('Il est desactive sur ce site.');
+      else if (res && res.reason === 'unknown') flash('Recharge la page (F5).');
+      else flash('Recharge la page (F5) puis reessaie.');
       return;
     }
     flash(okText);
@@ -150,24 +157,15 @@ function send(msg, okText, onOk) {
   });
 }
 
-function revive(msg, okText, onOk) {
-  flash('Reconnexion...');
+function revive(msg, okText, onOk, stale) {
+  flash(stale ? 'Mise a jour de la page...' : 'Reconnexion...');
   if (!chrome.scripting) { flash('Recharge la page (F5).'); return; }
 
   chrome.scripting.insertCSS({ target: { tabId }, files: ['pet.css'] }, () => {
     void chrome.runtime.lastError;
     chrome.scripting.executeScript({ target: { tabId }, files: ['pet.js'] }, () => {
       if (chrome.runtime.lastError) { flash('Impossible sur cette page.'); return; }
-      setTimeout(() => {
-        chrome.tabs.sendMessage(tabId, msg, res => {
-          if (chrome.runtime.lastError || !res || !res.ok) {
-            flash('Recharge la page (F5) puis reessaie.');
-          } else {
-            flash(okText);
-            if (onOk) onOk();
-          }
-        });
-      }, 350);
+      setTimeout(() => send(msg, okText, onOk, true), 400);
     });
   });
 }
@@ -198,10 +196,11 @@ chrome.storage.onChanged.addListener(changes => {
 
 /* ---------- demarrage ---------- */
 chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
-  const tab = tabs[0];
+  const tab = tabs && tabs[0];
+  /* l'id doit etre pris hors du try : sans lui, plus aucun bouton ne marche */
+  if (tab) tabId = tab.id;
   try {
     host = new URL(tab.url).hostname;
-    tabId = tab.id;
   } catch (e) {
     host = '';
   }

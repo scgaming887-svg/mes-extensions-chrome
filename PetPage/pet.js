@@ -584,13 +584,28 @@ class PetGame {
     this.shield = document.createElement('div');
     this.shield.className = 'petpage-shield';
 
+    /* construit en DOM plutot qu'en innerHTML : certains sites (Google,
+       YouTube) imposent Trusted Types, qui bloque innerHTML. */
     this.hud = document.createElement('div');
     this.hud.className = 'petpage-hud';
-    this.hud.innerHTML =
-      '<span class="pg-title"></span>' +
-      '<span class="pg-stat pg-score"></span>' +
-      '<span class="pg-stat pg-extra"></span>' +
-      '<button class="pg-quit" type="button">Quitter</button>';
+
+    const title = document.createElement('span');
+    title.className = 'pg-title';
+    title.textContent = this.meta.icon + ' ' + this.meta.name;
+
+    this.hScore = document.createElement('span');
+    this.hScore.className = 'pg-stat pg-score';
+
+    this.hExtra = document.createElement('span');
+    this.hExtra.className = 'pg-stat pg-extra';
+
+    const quit = document.createElement('button');
+    quit.className = 'pg-quit';
+    quit.type = 'button';
+    quit.textContent = 'Quitter';
+    quit.addEventListener('click', () => this.destroy());
+
+    this.hud.append(title, this.hScore, this.hExtra, quit);
 
     this.tip = document.createElement('div');
     this.tip.className = 'petpage-tip';
@@ -598,19 +613,15 @@ class PetGame {
 
     document.body.append(this.shield, this.hud, this.tip);
 
-    this.hud.querySelector('.pg-title').textContent = this.meta.icon + ' ' + this.meta.name;
-    this.hud.querySelector('.pg-quit').addEventListener('click', () => this.destroy());
-
     setTimeout(() => this.tip.classList.add('is-gone'), 4000);
     this.drawHud();
   }
 
   drawHud() {
-    this.hud.querySelector('.pg-score').textContent = 'Score ' + Math.round(this.score);
-    const extra = this.hud.querySelector('.pg-extra');
-    if (this.id === 'treats') extra.textContent = '❤️'.repeat(Math.max(0, this.lives));
-    else if (this.id === 'runner') extra.textContent = 'Record ' + this.best;
-    else extra.textContent = (this.time / 1000).toFixed(1) + ' s';
+    this.hScore.textContent = 'Score ' + Math.round(this.score);
+    if (this.id === 'treats') this.hExtra.textContent = '❤️'.repeat(Math.max(0, this.lives));
+    else if (this.id === 'runner') this.hExtra.textContent = 'Record ' + this.best;
+    else this.hExtra.textContent = (this.time / 1000).toFixed(1) + ' s';
   }
 
   bind() {
@@ -833,26 +844,42 @@ class PetGame {
 
     const card = document.createElement('div');
     card.className = 'petpage-card';
-    card.innerHTML =
-      '<div class="pc-title"></div>' +
-      '<div class="pc-score"></div>' +
-      '<div class="pc-best"></div>' +
-      '<div class="pc-btns">' +
-        '<button class="pc-again" type="button">Rejouer</button>' +
-        '<button class="pc-close" type="button">Fermer</button>' +
-      '</div>';
-    card.querySelector('.pc-title').textContent = msg;
-    card.querySelector('.pc-score').textContent = this.score + ' points';
-    card.querySelector('.pc-best').textContent = record ? '🏆 Nouveau record !' : 'Record : ' + this.best;
-    document.body.appendChild(card);
-    this.card = card;
 
-    card.querySelector('.pc-again').addEventListener('click', () => {
+    const t = document.createElement('div');
+    t.className = 'pc-title';
+    t.textContent = msg;
+
+    const s = document.createElement('div');
+    s.className = 'pc-score';
+    s.textContent = this.score + ' points';
+
+    const b = document.createElement('div');
+    b.className = 'pc-best';
+    b.textContent = record ? '🏆 Nouveau record !' : 'Record : ' + this.best;
+
+    const again = document.createElement('button');
+    again.className = 'pc-again';
+    again.type = 'button';
+    again.textContent = 'Rejouer';
+    again.addEventListener('click', () => {
       const id = this.id, p = this.pet;
       this.destroy();
       p.game = new PetGame(p, id);
     });
-    card.querySelector('.pc-close').addEventListener('click', () => this.destroy());
+
+    const close = document.createElement('button');
+    close.className = 'pc-close';
+    close.type = 'button';
+    close.textContent = 'Fermer';
+    close.addEventListener('click', () => this.destroy());
+
+    const btns = document.createElement('div');
+    btns.className = 'pc-btns';
+    btns.append(again, close);
+
+    card.append(t, s, b, btns);
+    document.body.appendChild(card);
+    this.card = card;
   }
 
   destroy() {
@@ -903,18 +930,24 @@ chrome.storage.onChanged.addListener(() => {
 });
 
 /* messages venant du popup */
+/* "handled: true" prouve au popup que c'est bien cette version du script
+   qui a repondu : une ancienne version repondrait ok sans rien faire. */
 function handle(msg, respond) {
   if (!pet) {
     respond({ ok: false, reason: activeHere(cfg) ? 'none' : 'off' });
     return;
   }
   if (msg.action === 'feed') pet.feed();
-  if (msg.action === 'jump') pet.jump(1.3);
-  if (msg.action === 'minigame') {
+  else if (msg.action === 'jump') pet.jump(1.3);
+  else if (msg.action === 'minigame') {
+    if (!GAME_META[msg.game]) { respond({ ok: false, reason: 'unknown' }); return; }
     if (pet.game) pet.game.destroy();
     pet.game = new PetGame(pet, msg.game);
+  } else {
+    respond({ ok: false, reason: 'unknown' });
+    return;
   }
-  respond({ ok: true });
+  respond({ ok: true, handled: true });
 }
 
 chrome.runtime.onMessage.addListener((msg, sender, respond) => {
