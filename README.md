@@ -25,7 +25,7 @@ Lance tes applications de bureau depuis le navigateur, et joue en attendant.
 - 9 raccourcis prêts : Roblox, Discord, Steam, Spotify, Epic, Minecraft, Twitch, VS Code, YouTube
 - Clic gauche : ouvre l'application installée · Clic droit : ouvre la version web
 - Ajoute tes propres raccourcis (nom, emoji, protocole, site)
-- Deux mini-jeux intégrés : **Snake** et **Casse-brique**, avec records sauvegardés
+- **Six mini-jeux** intégrés, records sauvegardés : Snake, Casse-brique, Flappy, 2048, Paires, Simon
 
 </td>
 </tr>
@@ -55,6 +55,10 @@ Un compagnon animé qui vit en bas de tes pages.
 - Il marche, s'ennuie, s'endort, saute tout seul et te suit à la souris
 - Nourriture adaptée à l'espèce : poisson pour le chat, os pour le chien, carotte pour le lapin…
 - Physique réelle : attrape-le, lance-le, il retombe et s'écrase au sol
+- **Trois mini-jeux** lancés depuis le popup, joués directement sur la page :
+  - 🍬 *Attrape les friandises* — bouge la souris, rattrape tout avant le sol (3 vies)
+  - 🌵 *Saute les obstacles* — course sans fin, Espace ou clic pour sauter
+  - 🏁 *La grande course* — clique le plus vite possible pour battre le rival
 - Désactivable site par site
 
 </td>

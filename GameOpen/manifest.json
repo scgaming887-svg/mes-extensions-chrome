@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "GameOpen",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Un lanceur d'applications (Roblox, Discord, Steam...) avec des mini-jeux integres pour patienter.",
   "icons": {
     "16": "icons/icon16.png",

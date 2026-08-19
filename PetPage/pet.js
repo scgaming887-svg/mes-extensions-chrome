@@ -4,6 +4,7 @@
    Interactions : 1 clic = caresse + petit saut
                   2 clics = on lui donne a manger
                   glisser = on l'attrape et on le lance
+   Mini-jeux    : lances depuis le popup (Attrape / Saute / Course)
    ============================================================ */
 
 (function () {
@@ -11,7 +12,8 @@
 /* Un ancien exemplaire tourne peut-etre encore (extension rechargee sans
    recharger l'onglet) : on nettoie ses elements avant de repartir a neuf. */
 document.querySelectorAll(
-  '.petpage-pet, .petpage-bubble, .petpage-food, .petpage-particle'
+  '.petpage-pet, .petpage-bubble, .petpage-food, .petpage-particle, ' +
+  '.petpage-shield, .petpage-hud, .petpage-card, .petpage-item, .petpage-rival, .petpage-finish'
 ).forEach(el => el.remove());
 
 const DEFAULTS = {
@@ -23,7 +25,8 @@ const DEFAULTS = {
   follow: true,
   chatty: true,
   disabledSites: [],
-  meals: 0
+  meals: 0,
+  petScores: { treats: 0, runner: 0, race: 0 }
 };
 
 /* de quoi mange chaque animal */
@@ -91,6 +94,7 @@ class Pet {
     this.tapTimer = null;
     this.mouse = { x: 0, y: 0, seen: false };
     this.bubbleTimer = null;
+    this.game = null;
 
     this.applySize();
     this.bindEvents();
@@ -103,7 +107,6 @@ class Pet {
 
   ground() { return window.innerHeight - this.size - 4; }
   inAir()  { return this.state === 'jumping' || this.state === 'falling'; }
-  busy()   { return this.state === 'dragged' || this.state === 'eating' || this.inAir(); }
 
   applySize() {
     this.size = this.cfg.size;
@@ -117,6 +120,7 @@ class Pet {
      ========================================================== */
   bindEvents() {
     this.onDown = e => {
+      if (this.game) return;
       e.preventDefault();
       this.press = { x: e.clientX, y: e.clientY };
       this.lastDrag = { x: e.clientX, y: e.clientY, t: performance.now() };
@@ -162,7 +166,7 @@ class Pet {
         return;
       }
 
-      /* pas de glisser : c'est un tap. On attend pour voir s'il y en a un 2e. */
+      /* pas de glisser : c'est un tap. On attend un eventuel 2e. */
       this.taps++;
       if (this.taps === 1) {
         this.tapTimer = setTimeout(() => { this.taps = 0; this.caress(); }, 260);
@@ -213,6 +217,7 @@ class Pet {
 
   /* fait tomber une gamelle du haut de l'ecran */
   feed() {
+    if (this.game) return;
     if (this.state === 'eating') { this.say('Attends, je mange ! 😅', 1600); return; }
     if (this.food) { this.say('Y en a deja une !', 1600); return; }
 
@@ -225,7 +230,6 @@ class Pet {
     el.style.fontSize = Math.round(this.size * 0.55) + 'px';
     document.body.appendChild(el);
 
-    /* elle tombe pres du compagnon, mais pas pile dessus */
     const spread = 120 + Math.random() * 120;
     const fx = this.x + (Math.random() < 0.5 ? -spread : spread);
     const fSize = this.size * 0.55;
@@ -249,14 +253,12 @@ class Pet {
     this.eatTimer = 900;
     this.vx = 0;
 
-    /* le compagnon croque */
     this.sprite.animate(
       [{ transform: 'scale(1,1)' }, { transform: 'scale(1.15,.85)' }, { transform: 'scale(.92,1.08)' },
        { transform: 'scale(1.12,.9)' }, { transform: 'scale(1,1)' }],
       { duration: 900, easing: 'ease-in-out' }
     );
 
-    /* la nourriture disparait */
     const f = this.food;
     f.el.animate(
       [{ transform: 'scale(1) rotate(0deg)', opacity: 1 },
@@ -273,13 +275,11 @@ class Pet {
       this.say(pick(LINES.full), 2200);
     }, 700);
 
-    /* compteur de repas, lu par le popup */
     chrome.storage.local.get({ meals: 0 }, r => {
       chrome.storage.local.set({ meals: (r.meals || 0) + 1 });
     });
   }
 
-  /* petites particules qui montent et s'effacent */
   particles(emoji, count, rise) {
     for (let i = 0; i < count; i++) {
       const p = document.createElement('div');
@@ -306,7 +306,7 @@ class Pet {
      Bulles
      ========================================================== */
   say(text, ms) {
-    if (!this.cfg.chatty) return;
+    if (!this.cfg.chatty || this.game) return;
     this.bubble.textContent = text;
     this.bubble.classList.add('is-visible');
     this.positionBubble();
@@ -383,7 +383,6 @@ class Pet {
 
     if (this.state === 'dragged') { this.render(); return; }
 
-    /* --- en l'air (saut, chute, projection) --- */
     if (this.inAir()) {
       this.vy += GRAVITY * dt;
       this.x += this.vx * dt;
@@ -405,7 +404,6 @@ class Pet {
       return;
     }
 
-    /* --- repas en cours --- */
     if (this.state === 'eating') {
       this.eatTimer -= dt;
       if (this.eatTimer <= 0) { this.setState('idle'); this.timer = 900; }
@@ -413,7 +411,6 @@ class Pet {
       return;
     }
 
-    /* --- il y a a manger : priorite absolue --- */
     if (this.food) {
       const target = this.food.x + this.food.size / 2;
       const dx = target - (this.x + this.size / 2);
@@ -429,7 +426,6 @@ class Pet {
       return;
     }
 
-    /* --- poursuite du curseur --- */
     if (this.cfg.follow && this.mouse.seen) {
       const dx = this.mouse.x - (this.x + this.size / 2);
       if (Math.abs(dx) > this.size * 1.5) {
@@ -442,7 +438,6 @@ class Pet {
         this.idleFor = 0;
         this.timer = 900;
 
-        /* si le curseur est haut au-dessus de lui, il essaie de l'attraper */
         if (this.mouse.y < this.y - this.size && Math.random() < 0.012) this.jump(1.1);
 
         this.clamp();
@@ -510,7 +505,8 @@ class Pet {
   loop(t) {
     const dt = Math.min(t - this.last, 60);
     this.last = t;
-    this.update(dt);
+    if (this.game) this.game.update(dt);
+    else this.update(dt);
     this.raf = requestAnimationFrame(this.loop);
   }
 
@@ -525,6 +521,7 @@ class Pet {
   }
 
   destroy() {
+    if (this.game) this.game.destroy();
     cancelAnimationFrame(this.raf);
     this.el.removeEventListener('mousedown', this.onDown);
     document.removeEventListener('mousemove', this.onMove, true);
@@ -539,6 +536,343 @@ class Pet {
 }
 
 /* ============================================================
+   Les mini-jeux
+   ============================================================ */
+const GAME_META = {
+  treats: {
+    name: 'Attrape les friandises', icon: '🍬',
+    help: 'Bouge la souris : ton compagnon te suit. Rattrape tout avant que ça touche le sol !'
+  },
+  runner: {
+    name: 'Saute les obstacles', icon: '🌵',
+    help: 'Espace ou clic pour sauter. Ça va de plus en plus vite.'
+  },
+  race: {
+    name: 'La grande course', icon: '🏁',
+    help: 'Clique ou tape Espace le plus vite possible pour battre le rival !'
+  }
+};
+
+const TREATS = ['🍬', '🍭', '🍪', '🧁', '🍩', '🍎', '🍓', '🥨'];
+const ROCKS  = ['🌵', '🪨', '📦', '🔥', '🧱'];
+
+class PetGame {
+  constructor(pet, id) {
+    this.pet = pet;
+    this.id = id;
+    this.meta = GAME_META[id];
+
+    this.score = 0;
+    this.lives = 3;
+    this.time = 0;
+    this.ended = false;
+    this.items = [];
+    this.spawnIn = 700;
+    this.speed = 0.32;
+    this.vy = 0;
+    this.onGround = true;
+
+    this.best = (pet.cfg.petScores && pet.cfg.petScores[id]) || 0;
+
+    this.buildUI();
+    this.bind();
+    this.setup();
+  }
+
+  /* ---------- interface ---------- */
+  buildUI() {
+    this.shield = document.createElement('div');
+    this.shield.className = 'petpage-shield';
+
+    this.hud = document.createElement('div');
+    this.hud.className = 'petpage-hud';
+    this.hud.innerHTML =
+      '<span class="pg-title"></span>' +
+      '<span class="pg-stat pg-score"></span>' +
+      '<span class="pg-stat pg-extra"></span>' +
+      '<button class="pg-quit" type="button">Quitter</button>';
+
+    this.tip = document.createElement('div');
+    this.tip.className = 'petpage-tip';
+    this.tip.textContent = this.meta.help;
+
+    document.body.append(this.shield, this.hud, this.tip);
+
+    this.hud.querySelector('.pg-title').textContent = this.meta.icon + ' ' + this.meta.name;
+    this.hud.querySelector('.pg-quit').addEventListener('click', () => this.destroy());
+
+    setTimeout(() => this.tip.classList.add('is-gone'), 4000);
+    this.drawHud();
+  }
+
+  drawHud() {
+    this.hud.querySelector('.pg-score').textContent = 'Score ' + Math.round(this.score);
+    const extra = this.hud.querySelector('.pg-extra');
+    if (this.id === 'treats') extra.textContent = '❤️'.repeat(Math.max(0, this.lives));
+    else if (this.id === 'runner') extra.textContent = 'Record ' + this.best;
+    else extra.textContent = (this.time / 1000).toFixed(1) + ' s';
+  }
+
+  bind() {
+    this.onKey = e => {
+      if (e.key === 'Escape') { this.destroy(); return; }
+      if (e.key === ' ' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        this.action();
+      }
+    };
+    this.onClick = e => {
+      if (e.target.closest('.petpage-hud, .petpage-card')) return;
+      e.preventDefault();
+      this.action();
+    };
+    document.addEventListener('keydown', this.onKey, true);
+    this.shield.addEventListener('mousedown', this.onClick);
+  }
+
+  action() {
+    if (this.ended) return;
+    if (this.id === 'runner' && this.onGround) {
+      this.vy = -0.62;
+      this.onGround = false;
+      this.pet.el.classList.add('is-air');
+    }
+    if (this.id === 'race') {
+      this.pet.x += 9;
+      this.pet.dir = 1;
+      this.pet.el.classList.add('is-walking');
+    }
+  }
+
+  /* ---------- mise en place ---------- */
+  setup() {
+    const p = this.pet;
+    p.hideBubble();
+    p.setState('idle');
+    p.el.classList.remove('is-sleeping', 'is-eating');
+    if (p.food) { p.food.el.remove(); p.food = null; }
+
+    p.y = p.ground();
+    p.dir = 1;
+
+    if (this.id === 'treats') p.x = window.innerWidth / 2;
+    if (this.id === 'runner') p.x = window.innerWidth * 0.16;
+
+    if (this.id === 'race') {
+      p.x = 24;
+      this.finishX = window.innerWidth - 90;
+
+      this.rival = document.createElement('div');
+      this.rival.className = 'petpage-rival';
+      this.rival.textContent = p.cfg.animal;
+      this.rival.style.fontSize = p.size + 'px';
+      document.body.appendChild(this.rival);
+      this.rivalX = 24;
+      /* le rival met environ 9 secondes a parcourir la piste */
+      this.rivalSpeed = (this.finishX - 24) / 9000;
+
+      this.flag = document.createElement('div');
+      this.flag.className = 'petpage-finish';
+      this.flag.textContent = '🏁';
+      this.flag.style.left = this.finishX + 'px';
+      document.body.appendChild(this.flag);
+    }
+    p.render();
+  }
+
+  /* ---------- boucle ---------- */
+  update(dt) {
+    if (this.ended) return;
+    this.time += dt;
+
+    if (this.id === 'treats') this.updateTreats(dt);
+    else if (this.id === 'runner') this.updateRunner(dt);
+    else this.updateRace(dt);
+
+    this.pet.render();
+    this.drawHud();
+  }
+
+  /* --- Attrape les friandises --- */
+  updateTreats(dt) {
+    const p = this.pet;
+
+    /* le compagnon suit la souris, en plus rapide que d'habitude */
+    const target = p.mouse.x - p.size / 2;
+    p.x += (target - p.x) * Math.min(1, dt / 90);
+    p.x = Math.max(0, Math.min(window.innerWidth - p.size, p.x));
+    p.dir = target > p.x ? 1 : -1;
+    p.el.classList.add('is-walking');
+
+    this.spawnIn -= dt;
+    if (this.spawnIn <= 0) {
+      this.spawnIn = Math.max(320, 850 - this.time / 60);
+      this.spawn(pick(TREATS), 0.10 + Math.random() * 0.06 + this.time / 900000);
+    }
+
+    const catchY = p.y + p.size * 0.35;
+    for (let i = this.items.length - 1; i >= 0; i--) {
+      const it = this.items[i];
+      it.y += it.v * dt;
+      it.el.style.top = it.y + 'px';
+
+      const hit = it.y + it.size > catchY &&
+                  Math.abs((it.x + it.size / 2) - (p.x + p.size / 2)) < (p.size + it.size) * 0.42;
+
+      if (hit) {
+        this.score += 10;
+        p.particles('✨', 3, -0.22);
+        it.el.remove();
+        this.items.splice(i, 1);
+      } else if (it.y > window.innerHeight - it.size) {
+        this.lives--;
+        it.el.animate([{ opacity: 1 }, { opacity: 0, transform: 'scale(.5)' }], { duration: 200 });
+        setTimeout(() => it.el.remove(), 190);
+        this.items.splice(i, 1);
+        if (this.lives <= 0) this.finish('Perdu !');
+      }
+    }
+  }
+
+  /* --- Saute les obstacles --- */
+  updateRunner(dt) {
+    const p = this.pet;
+    const g = p.ground();
+
+    this.speed = 0.30 + this.time / 90000;
+    this.score += dt * 0.012;
+
+    if (!this.onGround) {
+      this.vy += GRAVITY * dt;
+      p.y += this.vy * dt;
+      if (p.y >= g) {
+        p.y = g;
+        this.vy = 0;
+        this.onGround = true;
+        p.el.classList.remove('is-air');
+        p.squash();
+      }
+    } else {
+      p.el.classList.add('is-walking');
+    }
+
+    this.spawnIn -= dt;
+    if (this.spawnIn <= 0) {
+      this.spawnIn = 900 + Math.random() * 900 - Math.min(500, this.time / 40);
+      const size = p.size * (0.5 + Math.random() * 0.3);
+      const el = document.createElement('div');
+      el.className = 'petpage-item';
+      el.textContent = pick(ROCKS);
+      el.style.fontSize = size + 'px';
+      el.style.top = (window.innerHeight - size - 4) + 'px';
+      document.body.appendChild(el);
+      this.items.push({ el, x: window.innerWidth + size, y: 0, size, v: 0 });
+    }
+
+    for (let i = this.items.length - 1; i >= 0; i--) {
+      const it = this.items[i];
+      it.x -= this.speed * dt;
+      it.el.style.left = it.x + 'px';
+
+      const near = Math.abs((it.x + it.size / 2) - (p.x + p.size / 2)) < (p.size + it.size) * 0.34;
+      const low  = p.y > g - it.size * 0.75;
+      if (near && low) { this.finish('Aïe ! 💥'); return; }
+
+      if (it.x < -it.size) { it.el.remove(); this.items.splice(i, 1); }
+    }
+  }
+
+  /* --- La grande course --- */
+  updateRace(dt) {
+    const p = this.pet;
+
+    this.rivalX += this.rivalSpeed * dt;
+    this.rival.style.left = this.rivalX + 'px';
+    this.rival.style.top = (p.ground() - p.size * 0.9) + 'px';
+
+    this.score = Math.max(0, Math.round((20000 - this.time) / 100));
+
+    if (p.x >= this.finishX) {
+      p.x = this.finishX;
+      this.finish('Gagné ! 🏆', true);
+    } else if (this.rivalX >= this.finishX) {
+      this.score = 0;
+      this.finish('Le rival a gagné...');
+    }
+  }
+
+  spawn(emoji, v) {
+    const size = this.pet.size * 0.6;
+    const el = document.createElement('div');
+    el.className = 'petpage-item';
+    el.textContent = emoji;
+    el.style.fontSize = size + 'px';
+    const x = 20 + Math.random() * (window.innerWidth - size - 40);
+    el.style.left = x + 'px';
+    el.style.top = '-40px';
+    document.body.appendChild(el);
+    this.items.push({ el, x, y: -40, size, v });
+  }
+
+  /* ---------- fin de partie ---------- */
+  finish(msg, won) {
+    if (this.ended) return;
+    this.ended = true;
+    this.score = Math.round(this.score);
+
+    const record = this.score > this.best;
+    if (record) {
+      const scores = Object.assign({}, this.pet.cfg.petScores || {});
+      scores[this.id] = this.score;
+      this.pet.cfg.petScores = scores;
+      chrome.storage.local.set({ petScores: scores });
+      this.best = this.score;
+    }
+
+    if (won) this.pet.particles('🎉', 8, -0.3);
+
+    const card = document.createElement('div');
+    card.className = 'petpage-card';
+    card.innerHTML =
+      '<div class="pc-title"></div>' +
+      '<div class="pc-score"></div>' +
+      '<div class="pc-best"></div>' +
+      '<div class="pc-btns">' +
+        '<button class="pc-again" type="button">Rejouer</button>' +
+        '<button class="pc-close" type="button">Fermer</button>' +
+      '</div>';
+    card.querySelector('.pc-title').textContent = msg;
+    card.querySelector('.pc-score').textContent = this.score + ' points';
+    card.querySelector('.pc-best').textContent = record ? '🏆 Nouveau record !' : 'Record : ' + this.best;
+    document.body.appendChild(card);
+    this.card = card;
+
+    card.querySelector('.pc-again').addEventListener('click', () => {
+      const id = this.id, p = this.pet;
+      this.destroy();
+      p.game = new PetGame(p, id);
+    });
+    card.querySelector('.pc-close').addEventListener('click', () => this.destroy());
+  }
+
+  destroy() {
+    document.removeEventListener('keydown', this.onKey, true);
+    this.items.forEach(it => it.el.remove());
+    this.items = [];
+    [this.shield, this.hud, this.tip, this.card, this.rival, this.flag]
+      .forEach(el => { if (el) el.remove(); });
+
+    const p = this.pet;
+    p.game = null;
+    p.el.classList.remove('is-air');
+    p.y = p.ground();
+    p.setState('idle');
+    p.timer = 800;
+    p.render();
+  }
+}
+
+/* ============================================================
    Synchronisation avec les reglages
    ============================================================ */
 function activeHere(config) {
@@ -546,15 +880,18 @@ function activeHere(config) {
 }
 
 function sync(res) {
+  const wasGame = pet && pet.game;
   cfg = Object.assign({}, DEFAULTS, res);
   cfg.disabledSites = cfg.disabledSites || [];
+  cfg.petScores = cfg.petScores || { treats: 0, runner: 0, race: 0 };
 
   if (!activeHere(cfg)) {
     if (pet) { pet.destroy(); pet = null; }
     return;
   }
   if (!pet) pet = new Pet(cfg);
-  else pet.refresh(cfg);
+  else if (!wasGame) pet.refresh(cfg);
+  else pet.cfg = cfg;   /* partie en cours : on ne bouscule rien */
 }
 
 function start() {
@@ -565,7 +902,7 @@ chrome.storage.onChanged.addListener(() => {
   chrome.storage.local.get(DEFAULTS, sync);
 });
 
-/* boutons "Nourrir" et "Sauter" du popup */
+/* messages venant du popup */
 function handle(msg, respond) {
   if (!pet) {
     respond({ ok: false, reason: activeHere(cfg) ? 'none' : 'off' });
@@ -573,12 +910,15 @@ function handle(msg, respond) {
   }
   if (msg.action === 'feed') pet.feed();
   if (msg.action === 'jump') pet.jump(1.3);
+  if (msg.action === 'minigame') {
+    if (pet.game) pet.game.destroy();
+    pet.game = new PetGame(pet, msg.game);
+  }
   respond({ ok: true });
 }
 
 chrome.runtime.onMessage.addListener((msg, sender, respond) => {
   if (pet) { handle(msg, respond); return true; }
-  /* le compagnon n'est pas encore ne : on lit les reglages puis on repond */
   chrome.storage.local.get(DEFAULTS, res => { sync(res); handle(msg, respond); });
   return true;
 });

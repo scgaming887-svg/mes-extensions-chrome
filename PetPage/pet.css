@@ -94,3 +94,106 @@
 
 /* ---- il est en l'air : plus d'animation de marche, il garde sa pose ---- */
 .petpage-pet.is-air .petpage-sprite { animation: none; }
+
+/* ============================================================
+   Mini-jeux
+   ============================================================ */
+
+/* voile qui capte les clics et signale le mode jeu */
+.petpage-shield {
+  position: fixed; inset: 0;
+  z-index: 2147483640;
+  background: rgba(8, 10, 20, .28);
+  backdrop-filter: saturate(.75);
+  cursor: pointer;
+}
+
+/* bandeau du haut */
+.petpage-hud {
+  position: fixed; top: 14px; left: 50%;
+  transform: translateX(-50%);
+  z-index: 2147483647;
+  display: flex; align-items: center; gap: 14px;
+  padding: 9px 10px 9px 16px;
+  background: #171a24; border: 1px solid #2f3446;
+  border-radius: 14px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, .45);
+  font: 600 13px/1 "Segoe UI", system-ui, sans-serif;
+  color: #eef0f7;
+  white-space: nowrap;
+}
+.petpage-hud .pg-title { color: #ffb45c; }
+.petpage-hud .pg-stat { color: #8f96ad; font-weight: 500; }
+.petpage-hud .pg-score { color: #eef0f7; font-weight: 700; }
+.petpage-hud .pg-quit {
+  padding: 6px 12px; background: #232838; border: 1px solid #2f3446;
+  border-radius: 9px; color: #8f96ad; font: inherit; font-size: 12px; cursor: pointer;
+}
+.petpage-hud .pg-quit:hover { color: #ff7676; border-color: #ff7676; }
+
+/* consigne affichee au debut */
+.petpage-tip {
+  position: fixed; top: 68px; left: 50%;
+  transform: translateX(-50%);
+  z-index: 2147483647;
+  max-width: 460px; padding: 8px 16px;
+  background: rgba(23, 26, 36, .94); border: 1px solid #2f3446;
+  border-radius: 20px;
+  font: 500 12.5px/1.4 "Segoe UI", system-ui, sans-serif;
+  color: #b9c0d4; text-align: center;
+  transition: opacity .5s;
+}
+.petpage-tip.is-gone { opacity: 0; }
+
+/* objets qui tombent / obstacles */
+.petpage-item {
+  position: fixed;
+  z-index: 2147483641;
+  pointer-events: none; user-select: none; line-height: 1;
+  filter: drop-shadow(0 3px 5px rgba(0, 0, 0, .4));
+}
+
+/* course : le rival et la ligne d'arrivee */
+.petpage-rival {
+  position: fixed;
+  z-index: 2147483641;
+  pointer-events: none; user-select: none; line-height: 1;
+  filter: grayscale(.75) drop-shadow(0 3px 5px rgba(0, 0, 0, .4));
+  animation: petpage-walk .3s infinite ease-in-out;
+}
+.petpage-finish {
+  position: fixed; bottom: 4px;
+  z-index: 2147483641;
+  font-size: 40px; line-height: 1;
+  pointer-events: none; user-select: none;
+}
+
+/* carte de fin de partie */
+.petpage-card {
+  position: fixed; top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 2147483647;
+  min-width: 260px; padding: 24px 28px;
+  background: #171a24; border: 1px solid #2f3446;
+  border-radius: 18px; text-align: center;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, .55);
+  font-family: "Segoe UI", system-ui, sans-serif; color: #eef0f7;
+  animation: petpage-pop .22s ease-out;
+}
+@keyframes petpage-pop {
+  from { transform: translate(-50%, -46%) scale(.9); opacity: 0; }
+  to   { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+}
+.petpage-card .pc-title { font-size: 20px; font-weight: 700; }
+.petpage-card .pc-score { margin-top: 6px; font-size: 30px; font-weight: 800; color: #ffb45c; }
+.petpage-card .pc-best { margin-top: 4px; font-size: 12.5px; color: #8f96ad; }
+.petpage-card .pc-btns { display: flex; gap: 8px; margin-top: 18px; }
+.petpage-card button {
+  flex: 1; padding: 9px 16px; border-radius: 10px;
+  font: 600 13px "Segoe UI", system-ui, sans-serif; cursor: pointer;
+  border: 1px solid #2f3446;
+}
+.petpage-card .pc-again { background: #ffb45c; border-color: #ffb45c; color: #241703; }
+.petpage-card .pc-again:hover { filter: brightness(1.08); }
+.petpage-card .pc-close { background: none; color: #8f96ad; }
+.petpage-card .pc-close:hover { color: #eef0f7; border-color: #8f96ad; }

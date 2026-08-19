@@ -11,8 +11,15 @@ const DEFAULTS = {
   follow: true,
   chatty: true,
   disabledSites: [],
-  meals: 0
+  meals: 0,
+  petScores: { treats: 0, runner: 0, race: 0 }
 };
+
+const GAMES = [
+  { id: 'treats', icon: '🍬', name: 'Attrape les friandises' },
+  { id: 'runner', icon: '🌵', name: 'Saute les obstacles' },
+  { id: 'race',   icon: '🏁', name: 'La grande course' }
+];
 
 const ANIMALS = ['🐱', '🐶', '🦊', '🐧', '🐹', '🐰', '🐼', '🐸', '🐢', '🦄', '🐉', '🐥',
                  '🐨', '🦖', '🐙', '🦉', '🐝', '🦋'];
@@ -39,7 +46,35 @@ function renderAnimals() {
   });
 }
 
+function renderGames() {
+  const box = document.getElementById('games');
+  box.innerHTML = '';
+  GAMES.forEach(g => {
+    const best = (cfg.petScores && cfg.petScores[g.id]) || 0;
+
+    const b = document.createElement('button');
+    b.className = 'game-btn';
+    b.title = 'Lancer sur la page ouverte';
+
+    const ic = document.createElement('span'); ic.className = 'gi'; ic.textContent = g.icon;
+    const nm = document.createElement('span'); nm.className = 'gn'; nm.textContent = g.name;
+    const bs = document.createElement('span'); bs.className = 'gb';
+    if (best > 0) { bs.textContent = 'record '; const s = document.createElement('b'); s.textContent = best; bs.appendChild(s); }
+    else bs.textContent = 'jamais joué';
+
+    b.append(ic, nm, bs);
+    b.addEventListener('click', () => launchGame(g));
+    box.appendChild(b);
+  });
+}
+
+/* lance le jeu dans l'onglet puis referme le popup pour laisser voir la page */
+function launchGame(g) {
+  send({ action: 'minigame', game: g.id }, 'C\'est parti !', () => setTimeout(window.close, 250));
+}
+
 function fillForm() {
+  renderGames();
   document.getElementById('enabled').checked = cfg.enabled;
   document.getElementById('preview').textContent = cfg.animal;
   document.getElementById('petName').value = cfg.petName;
@@ -95,13 +130,13 @@ function flash(text) {
   flash.t = setTimeout(() => { el.textContent = ''; }, 2200);
 }
 
-function send(action, okText) {
+function send(msg, okText, onOk) {
   if (tabId === null) { flash('Impossible sur cette page.'); return; }
 
-  chrome.tabs.sendMessage(tabId, { action }, res => {
+  chrome.tabs.sendMessage(tabId, msg, res => {
     if (chrome.runtime.lastError) {
       /* script absent ou orphelin (extension rechargee) : on le reinjecte */
-      revive(action, okText);
+      revive(msg, okText, onOk);
       return;
     }
     if (!res || !res.ok) {
@@ -111,10 +146,11 @@ function send(action, okText) {
       return;
     }
     flash(okText);
+    if (onOk) onOk();
   });
 }
 
-function revive(action, okText) {
+function revive(msg, okText, onOk) {
   flash('Reconnexion...');
   if (!chrome.scripting) { flash('Recharge la page (F5).'); return; }
 
@@ -123,17 +159,21 @@ function revive(action, okText) {
     chrome.scripting.executeScript({ target: { tabId }, files: ['pet.js'] }, () => {
       if (chrome.runtime.lastError) { flash('Impossible sur cette page.'); return; }
       setTimeout(() => {
-        chrome.tabs.sendMessage(tabId, { action }, res => {
-          if (chrome.runtime.lastError || !res || !res.ok) flash('Recharge la page (F5) puis reessaie.');
-          else flash(okText);
+        chrome.tabs.sendMessage(tabId, msg, res => {
+          if (chrome.runtime.lastError || !res || !res.ok) {
+            flash('Recharge la page (F5) puis reessaie.');
+          } else {
+            flash(okText);
+            if (onOk) onOk();
+          }
         });
       }, 350);
     });
   });
 }
 
-document.getElementById('do-feed').addEventListener('click', () => send('feed', 'Repas servi ! 🍖'));
-document.getElementById('do-jump').addEventListener('click', () => send('jump', 'Hop ! ⬆️'));
+document.getElementById('do-feed').addEventListener('click', () => send({ action: 'feed' }, 'Repas servi ! 🍖'));
+document.getElementById('do-jump').addEventListener('click', () => send({ action: 'jump' }, 'Hop ! ⬆️'));
 
 document.getElementById('toggle-site').addEventListener('click', () => {
   if (!host) return;
@@ -149,6 +189,10 @@ chrome.storage.onChanged.addListener(changes => {
   if (changes.meals) {
     cfg.meals = changes.meals.newValue;
     renderMeals();
+  }
+  if (changes.petScores) {
+    cfg.petScores = changes.petScores.newValue;
+    renderGames();
   }
 });
 

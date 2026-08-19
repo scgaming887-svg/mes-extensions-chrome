@@ -75,10 +75,12 @@ h1 span { color: var(--accent-2); }
 .btn-ghost:hover { color: var(--text); border-color: var(--muted); }
 
 /* ---- Jeux ---- */
-.game-picker { display: flex; gap: 6px; margin-bottom: 10px; }
+.game-picker { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; margin-bottom: 10px; }
 .chip {
-  flex: 1; padding: 6px; background: var(--surface); border: 1px solid var(--line);
-  border-radius: 20px; color: var(--muted); font: inherit; font-size: 11px; cursor: pointer;
+  padding: 6px 2px; background: var(--surface); border: 1px solid var(--line);
+  border-radius: 8px; color: var(--muted); font: inherit; font-size: 10.5px;
+  cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  transition: background .13s, border-color .13s, color .13s;
 }
 .chip.is-active { background: var(--accent); border-color: var(--accent); color: #fff; }
 
