@@ -1,0 +1,98 @@
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #12131a;
+  --surface: #1c1e29;
+  --surface-hi: #262938;
+  --line: #333748;
+  --text: #e8e9f0;
+  --muted: #8b90a8;
+  --accent: #6c5ce7;
+  --accent-2: #00d2a0;
+}
+
+body {
+  width: 340px;
+  background: var(--bg);
+  color: var(--text);
+  font: 13px/1.4 "Segoe UI", system-ui, sans-serif;
+  padding-bottom: 12px;
+}
+
+header { padding: 14px 14px 0; }
+h1 { font-size: 19px; letter-spacing: -0.3px; }
+h1 span { color: var(--accent-2); }
+
+.tabs { display: flex; gap: 6px; margin-top: 12px; border-bottom: 1px solid var(--line); }
+.tab {
+  flex: 1; padding: 8px; background: none; border: none; border-bottom: 2px solid transparent;
+  color: var(--muted); font: inherit; font-weight: 600; cursor: pointer;
+}
+.tab.is-active { color: var(--text); border-bottom-color: var(--accent); }
+
+.panel { display: none; padding: 12px 14px 0; }
+.panel.is-active { display: block; }
+
+.hint { color: var(--muted); font-size: 11px; margin-bottom: 10px; }
+
+/* ---- Apps ---- */
+.grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.app {
+  position: relative; display: flex; flex-direction: column; align-items: center; gap: 6px;
+  padding: 12px 4px; background: var(--surface); border: 1px solid var(--line);
+  border-radius: 12px; color: var(--text); font: inherit; cursor: pointer;
+  transition: transform .12s, border-color .12s, background .12s;
+}
+.app:hover { transform: translateY(-2px); border-color: var(--accent); background: var(--surface-hi); }
+.app:active { transform: translateY(0) scale(.97); }
+.app .emoji { font-size: 24px; line-height: 1; }
+.app .name { font-size: 11px; font-weight: 600; }
+.app .kill {
+  position: absolute; top: 2px; right: 4px; opacity: 0; color: var(--muted);
+  font-size: 14px; line-height: 1; background: none; border: none; cursor: pointer;
+}
+.app:hover .kill { opacity: 1; }
+.app .kill:hover { color: #ff6b6b; }
+
+.adder { margin-top: 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 10px; }
+.adder summary { cursor: pointer; font-weight: 600; color: var(--muted); }
+.adder label { display: block; margin-top: 8px; font-size: 11px; color: var(--muted); }
+.adder input {
+  width: 100%; margin-top: 3px; padding: 6px 8px; background: var(--bg);
+  border: 1px solid var(--line); border-radius: 6px; color: var(--text); font: inherit;
+}
+.adder input:focus { outline: none; border-color: var(--accent); }
+
+.btn-primary {
+  margin-top: 10px; width: 100%; padding: 8px; background: var(--accent); color: #fff;
+  border: none; border-radius: 8px; font: inherit; font-weight: 600; cursor: pointer;
+}
+.btn-primary:hover { filter: brightness(1.12); }
+.btn-ghost {
+  margin-top: 8px; width: 100%; padding: 6px; background: none; color: var(--muted);
+  border: 1px solid var(--line); border-radius: 8px; font: inherit; font-size: 11px; cursor: pointer;
+}
+.btn-ghost:hover { color: var(--text); border-color: var(--muted); }
+
+/* ---- Jeux ---- */
+.game-picker { display: flex; gap: 6px; margin-bottom: 10px; }
+.chip {
+  flex: 1; padding: 6px; background: var(--surface); border: 1px solid var(--line);
+  border-radius: 20px; color: var(--muted); font: inherit; font-size: 11px; cursor: pointer;
+}
+.chip.is-active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+.score-bar { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin-bottom: 6px; }
+.score-bar b { color: var(--accent-2); font-size: 13px; }
+
+.stage { position: relative; }
+canvas { display: block; background: #0c0d13; border: 1px solid var(--line); border-radius: 10px; }
+
+.overlay {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
+  background: rgba(12,13,19,.86); border-radius: 10px;
+}
+.overlay.hidden { display: none; }
+.overlay p { font-weight: 600; text-align: center; padding: 0 20px; }
+.overlay .btn-primary { width: auto; padding: 8px 24px; margin: 0; }

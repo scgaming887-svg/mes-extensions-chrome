@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <span class="logo">🎨</span>
+      <h1>Page<span>Customer</span></h1>
+    </div>
+    <label class="switch" title="Activer / desactiver">
+      <input type="checkbox" id="enabled">
+      <span class="slider"></span>
+    </label>
+  </header>
+
+  <div class="scopebar">
+    <div class="segmented">
+      <button class="seg is-active" data-scope="site">Ce site</button>
+      <button class="seg" data-scope="global">Partout</button>
+    </div>
+    <span class="host" id="host">—</span>
+  </div>
+  <p class="explain" id="explain">Ces reglages ne s'appliquent qu'a ce site.</p>
+
+  <nav class="tabs">
+    <button class="tab is-active" data-tab="themes">Themes</button>
+    <button class="tab" data-tab="tune">Reglages</button>
+    <button class="tab" data-tab="pro">Avance</button>
+  </nav>
+
+  <main id="main">
+
+    <!-- ============ THEMES ============ -->
+    <section class="panel is-active" id="panel-themes">
+      <div class="theme-grid" id="theme-grid"></div>
+
+      <h2>Reglages express</h2>
+      <div class="chips" id="quick-chips"></div>
+    </section>
+
+    <!-- ============ REGLAGES ============ -->
+    <section class="panel" id="panel-tune">
+      <div class="card">
+        <div class="card-head">
+          <h2>Couleurs</h2>
+          <label class="mini-switch">
+            <input type="checkbox" id="useColors">
+            <span></span>
+          </label>
+        </div>
+        <div class="swatches" id="swatches">
+          <label class="swatch"><input type="color" id="bg"><span>Fond</span></label>
+          <label class="swatch"><input type="color" id="fg"><span>Texte</span></label>
+          <label class="swatch"><input type="color" id="link"><span>Liens</span></label>
+        </div>
+        <label class="field">
+          <span class="lbl">Image de fond (URL)</span>
+          <input type="text" id="bgImage" placeholder="https://exemple.com/image.jpg">
+        </label>
+      </div>
+
+      <div class="card">
+        <h2>Texte</h2>
+        <label class="field">
+          <span class="lbl">Police</span>
+          <select id="font">
+            <option value="">Celle du site</option>
+            <option value="system-ui, sans-serif">Systeme</option>
+            <option value="Georgia, serif">Georgia (serif)</option>
+            <option value="'Segoe UI', sans-serif">Segoe UI</option>
+            <option value="Verdana, sans-serif">Verdana (lisible)</option>
+            <option value="'Trebuchet MS', sans-serif">Trebuchet</option>
+            <option value="'Comic Sans MS', cursive">Comic Sans</option>
+            <option value="'Courier New', monospace">Machine a ecrire</option>
+          </select>
+        </label>
+        <div class="slide">
+          <div class="slide-top"><span class="lbl">Zoom</span><button class="pill" data-reset="zoom" id="zoom-o">100%</button></div>
+          <input type="range" id="zoom" min="60" max="200" step="5" value="100">
+        </div>
+        <div class="slide">
+          <div class="slide-top"><span class="lbl">Interligne</span><button class="pill" data-reset="lh" id="lh-o">normal</button></div>
+          <input type="range" id="lh" min="100" max="250" step="10" value="100">
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Mise en page</h2>
+        <div class="slide">
+          <div class="slide-top"><span class="lbl">Largeur de lecture</span><button class="pill" data-reset="width" id="width-o">pleine</button></div>
+          <input type="range" id="width" min="500" max="2000" step="50" value="2000">
+        </div>
+        <div class="slide">
+          <div class="slide-top"><span class="lbl">Coins arrondis</span><button class="pill" data-reset="radius" id="radius-o">0px</button></div>
+          <input type="range" id="radius" min="0" max="30" step="1" value="0">
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ AVANCE ============ -->
+    <section class="panel" id="panel-pro">
+      <div class="card">
+        <h2>Filtres d'image</h2>
+        <div class="slide">
+          <div class="slide-top"><span class="lbl">Luminosite</span><button class="pill" data-reset="bright" id="bright-o">100%</button></div>
+          <input type="range" id="bright" min="30" max="150" step="5" value="100">
+        </div>
+        <div class="slide">
+          <div class="slide-top"><span class="lbl">Contraste</span><button class="pill" data-reset="contrast" id="contrast-o">100%</button></div>
+          <input type="range" id="contrast" min="50" max="200" step="5" value="100">
+        </div>
+        <div class="slide">
+          <div class="slide-top"><span class="lbl">Saturation</span><button class="pill" data-reset="sat" id="sat-o">100%</button></div>
+          <input type="range" id="sat" min="0" max="200" step="5" value="100">
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Options</h2>
+        <label class="check"><input type="checkbox" id="invert"><span>Inverser les couleurs (sombre force)</span></label>
+        <label class="check"><input type="checkbox" id="hideImages"><span>Masquer les images</span></label>
+        <label class="check"><input type="checkbox" id="noAnim"><span>Couper les animations</span></label>
+      </div>
+
+      <div class="card">
+        <h2>CSS personnalise</h2>
+        <textarea id="css" spellcheck="false" placeholder="h1 { text-shadow: 0 0 8px #f0f; }"></textarea>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <span class="status" id="status">Aucun reglage actif</span>
+    <button id="reset" class="btn-reset">Reinitialiser</button>
+  </footer>
+
+  <script src="popup.js"></script>
+</body>
+</html>

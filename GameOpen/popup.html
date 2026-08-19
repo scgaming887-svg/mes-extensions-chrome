@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <header>
+    <h1>Game<span>Open</span></h1>
+    <nav class="tabs">
+      <button class="tab is-active" data-tab="apps">Apps</button>
+      <button class="tab" data-tab="games">Jeux</button>
+    </nav>
+  </header>
+
+  <!-- ============ ONGLET APPS ============ -->
+  <section class="panel is-active" id="panel-apps">
+    <p class="hint">Clic = lance l'app installee. Clic droit = ouvre la version web.</p>
+    <div class="grid" id="app-grid"></div>
+
+    <details class="adder">
+      <summary>+ Ajouter un raccourci</summary>
+      <label>Nom <input id="new-name" placeholder="Epic Games"></label>
+      <label>Emoji <input id="new-icon" placeholder="🎮" maxlength="4"></label>
+      <label>Protocole <input id="new-proto" placeholder="com.epicgames.launcher://"></label>
+      <label>Site web <input id="new-web" placeholder="https://epicgames.com"></label>
+      <button id="add-app" class="btn-primary">Ajouter</button>
+    </details>
+    <button id="reset-apps" class="btn-ghost">Reinitialiser la liste</button>
+  </section>
+
+  <!-- ============ ONGLET JEUX ============ -->
+  <section class="panel" id="panel-games">
+    <div class="game-picker">
+      <button class="chip is-active" data-game="snake">🐍 Snake</button>
+      <button class="chip" data-game="breakout">🧱 Casse-brique</button>
+    </div>
+    <div class="score-bar">
+      <span>Score <b id="score">0</b></span>
+      <span>Record <b id="best">0</b></span>
+    </div>
+    <div class="stage">
+      <canvas id="canvas" width="320" height="320"></canvas>
+      <div class="overlay" id="overlay">
+      <p id="overlay-text">Appuie sur Espace</p>
+      <button id="overlay-btn" class="btn-primary">Jouer</button>
+      </div>
+    </div>
+    <p class="hint" id="controls">Fleches ou WASD pour diriger le serpent.</p>
+  </section>
+
+  <script src="popup.js"></script>
+</body>
+</html>

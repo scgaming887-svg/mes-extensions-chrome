@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mes extensions Chrome — telechargement</title>
+<meta name="description" content="Trois extensions Chrome a telecharger : GameOpen, PageCustomer et PetPage.">
+<link rel="icon" href="assets/petpage.png">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0d0f16;
+    --surface: #171a24;
+    --surface-2: #1e2230;
+    --line: #2a2f40;
+    --text: #eef0f7;
+    --muted: #8a91a8;
+    --accent: #4da3ff;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font: 16px/1.6 "Segoe UI", system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap { width: 100%; max-width: 900px; margin: 0 auto; padding: 0 20px; }
+
+  /* ================= hero ================= */
+  header {
+    position: relative;
+    padding: 72px 0 56px;
+    text-align: center;
+    background:
+      radial-gradient(700px 340px at 20% 0%, rgba(124, 92, 255, .28), transparent 65%),
+      radial-gradient(700px 340px at 80% 10%, rgba(255, 107, 157, .20), transparent 65%);
+    border-bottom: 1px solid var(--line);
+  }
+  .badge {
+    display: inline-block; margin-bottom: 18px; padding: 5px 14px;
+    background: rgba(77, 163, 255, .12); border: 1px solid rgba(77, 163, 255, .35);
+    border-radius: 30px; color: var(--accent); font-size: 12.5px; font-weight: 600;
+    letter-spacing: .3px;
+  }
+  h1 { font-size: clamp(30px, 6vw, 46px); line-height: 1.15; letter-spacing: -1px; font-weight: 800; }
+  h1 em { font-style: normal; background: linear-gradient(100deg, #7c5cff, #4da3ff, #00d2a0);
+          -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .lead { max-width: 560px; margin: 16px auto 30px; color: var(--muted); font-size: 16.5px; }
+
+  .cta {
+    display: inline-flex; align-items: center; gap: 10px;
+    padding: 14px 26px; border-radius: 12px; text-decoration: none;
+    background: linear-gradient(100deg, #4da3ff, #7c5cff); color: #fff;
+    font-weight: 700; font-size: 15.5px;
+    box-shadow: 0 10px 30px rgba(77, 163, 255, .3);
+    transition: transform .15s, box-shadow .15s;
+  }
+  .cta:hover { transform: translateY(-2px); box-shadow: 0 14px 36px rgba(77, 163, 255, .42); }
+  .cta small { font-weight: 500; opacity: .8; }
+
+  /* ================= cartes ================= */
+  main { padding: 54px 0 20px; }
+  h2 { font-size: 13px; text-transform: uppercase; letter-spacing: 1.2px;
+       color: var(--muted); margin-bottom: 20px; }
+
+  .card {
+    display: flex; align-items: flex-start; gap: 20px;
+    padding: 22px; margin-bottom: 16px;
+    background: var(--surface); border: 1px solid var(--line); border-radius: 18px;
+    transition: transform .16s, border-color .16s;
+  }
+  .card:hover { transform: translateY(-3px); border-color: #3d445c; }
+  .card img { width: 72px; height: 72px; flex: none; border-radius: 18px; }
+  .card-body { flex: 1; min-width: 0; }
+  .card h3 { font-size: 20px; font-weight: 700; letter-spacing: -.3px; }
+  .card p { margin: 4px 0 12px; color: var(--muted); font-size: 14.5px; }
+  .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+  .tag {
+    padding: 3px 10px; background: var(--surface-2); border: 1px solid var(--line);
+    border-radius: 20px; font-size: 12px; color: #a8afc4;
+  }
+  .dl {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 9px 18px; border-radius: 10px; text-decoration: none;
+    background: var(--surface-2); border: 1px solid var(--line); color: var(--text);
+    font-size: 14px; font-weight: 600; transition: all .15s;
+  }
+  .dl:hover { background: var(--accent); border-color: var(--accent); color: #06101d; }
+  .dl span { opacity: .6; font-weight: 500; font-size: 12.5px; }
+  .dl:hover span { opacity: .75; }
+
+  /* ================= installation ================= */
+  .steps { padding: 34px 0 10px; }
+  .step {
+    display: flex; gap: 16px; padding: 16px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .step:last-child { border-bottom: none; }
+  .num {
+    width: 30px; height: 30px; flex: none; display: grid; place-items: center;
+    background: linear-gradient(100deg, #4da3ff, #7c5cff); border-radius: 50%;
+    font-size: 14px; font-weight: 700; color: #fff;
+  }
+  .step b { display: block; margin-bottom: 2px; font-size: 15.5px; }
+  .step p { color: var(--muted); font-size: 14.5px; }
+  code {
+    padding: 2px 8px; background: var(--surface-2); border: 1px solid var(--line);
+    border-radius: 6px; font-family: Consolas, monospace; font-size: 13.5px; color: #9fd0ff;
+  }
+
+  .note {
+    margin: 26px 0 10px; padding: 16px 18px;
+    background: rgba(255, 180, 92, .07); border: 1px solid rgba(255, 180, 92, .3);
+    border-radius: 14px; font-size: 14px; color: #d9c3a3;
+  }
+  .note b { color: #ffb45c; }
+
+  footer {
+    margin-top: 40px; padding: 26px 0 40px; border-top: 1px solid var(--line);
+    text-align: center; color: var(--muted); font-size: 13px;
+  }
+
+  @media (max-width: 560px) {
+    .card { flex-direction: column; }
+    .card img { width: 56px; height: 56px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <span class="badge">3 extensions · gratuites · sans pub</span>
+    <h1>Mes extensions <em>Chrome</em></h1>
+    <p class="lead">
+      Un lanceur de jeux, un personnalisateur de pages et un petit compagnon animé.
+      Télécharge, décompresse, installe — deux minutes.
+    </p>
+    <a class="cta" href="downloads/MesExtensions-tout.zip" download>
+      ⬇️ Tout télécharger <small>· 110 Ko</small>
+    </a>
+  </div>
+</header>
+
+<main class="wrap">
+  <h2>Ou une par une</h2>
+
+  <div class="card">
+    <img src="assets/gameopen.png" alt="GameOpen">
+    <div class="card-body">
+      <h3>GameOpen</h3>
+      <p>Lance Roblox, Discord, Steam ou Spotify depuis ton navigateur, et joue en attendant.</p>
+      <div class="tags">
+        <span class="tag">9 raccourcis prêts</span>
+        <span class="tag">Raccourcis perso</span>
+        <span class="tag">Snake</span>
+        <span class="tag">Casse-brique</span>
+      </div>
+      <a class="dl" href="downloads/GameOpen.zip" download>⬇️ Télécharger <span>37 Ko</span></a>
+    </div>
+  </div>
+
+  <div class="card">
+    <img src="assets/pagecustomer.png" alt="PageCustomer">
+    <div class="card-body">
+      <h3>PageCustomer</h3>
+      <p>Change l'apparence de n'importe quel site : thème sombre, couleurs, police, mode lecture.</p>
+      <div class="tags">
+        <span class="tag">6 thèmes</span>
+        <span class="tag">Mode sombre</span>
+        <span class="tag">Mode lecture</span>
+        <span class="tag">CSS perso</span>
+        <span class="tag">Réglages par site</span>
+      </div>
+      <a class="dl" href="downloads/PageCustomer.zip" download>⬇️ Télécharger <span>30 Ko</span></a>
+    </div>
+  </div>
+
+  <div class="card">
+    <img src="assets/petpage.png" alt="PetPage">
+    <div class="card-body">
+      <h3>PetPage</h3>
+      <p>Un compagnon qui marche, saute, dort et mange en bas de tes pages web.</p>
+      <div class="tags">
+        <span class="tag">18 animaux</span>
+        <span class="tag">Il te suit</span>
+        <span class="tag">Nourris-le</span>
+        <span class="tag">Attrape-le</span>
+      </div>
+      <a class="dl" href="downloads/PetPage.zip" download>⬇️ Télécharger <span>39 Ko</span></a>
+    </div>
+  </div>
+
+  <section class="steps">
+    <h2>Comment installer</h2>
+
+    <div class="step">
+      <span class="num">1</span>
+      <div>
+        <b>Décompresse le fichier</b>
+        <p>Clic droit sur le <code>.zip</code> → <b>Extraire tout</b>. Chrome ne sait pas lire une archive
+           directement, il lui faut un dossier. Garde ce dossier à un endroit fixe.</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <span class="num">2</span>
+      <div>
+        <b>Ouvre la page des extensions</b>
+        <p>Copie <code>chrome://extensions</code> dans la barre d'adresse. Sur Edge, c'est
+           <code>edge://extensions</code>.</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <span class="num">3</span>
+      <div>
+        <b>Active le mode développeur</b>
+        <p>L'interrupteur est en haut à droite de la page.</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <span class="num">4</span>
+      <div>
+        <b>Charge l'extension</b>
+        <p>Clique <b>Charger l'extension non empaquetée</b> et choisis le dossier que tu viens
+           d'extraire. C'est fini — épingle-la avec l'icône 🧩 de la barre d'outils.</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="note">
+    <b>Deux choses à savoir.</b>
+    Chrome affichera un bandeau « Désactiver les extensions en mode développeur » à chaque
+    démarrage : c'est normal pour une extension installée hors du Store, tu peux le fermer.
+    Et si tu supprimes ou déplaces le dossier extrait, l'extension cesse de fonctionner.
+  </div>
+</main>
+
+<footer class="wrap">
+  Aucune donnée collectée, aucune connexion à un serveur — tout reste dans ton navigateur.
+</footer>
+
+</body>
+</html>

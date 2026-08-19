@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <header>
+    <h1>Pet<span>Page</span></h1>
+    <label class="switch">
+      <input type="checkbox" id="enabled">
+      <span class="slider"></span>
+    </label>
+  </header>
+
+  <div class="stage">
+    <span id="preview">🐱</span>
+    <span class="meals" id="meals">🍽️ 0 repas</span>
+  </div>
+
+  <main>
+    <section class="card actions">
+      <button class="action" id="do-feed"><span>🍖</span>Nourrir</button>
+      <button class="action" id="do-jump"><span>⬆️</span>Sauter</button>
+    </section>
+    <p class="msg" id="msg"></p>
+
+    <section class="card">
+      <h2>Choisis ton animal</h2>
+      <div class="animals" id="animals"></div>
+    </section>
+
+    <section class="card">
+      <label class="field">Son petit nom
+        <input type="text" id="petName" maxlength="16" placeholder="Mimi">
+      </label>
+      <label class="field">Taille <output id="size-o">48px</output>
+        <input type="range" id="size" min="24" max="120" step="2" value="48">
+      </label>
+      <label class="field">Vitesse <output id="speed-o">x1</output>
+        <input type="range" id="speed" min="0.3" max="3" step="0.1" value="1">
+      </label>
+      <label class="check"><input type="checkbox" id="follow"> Il suit la souris</label>
+      <label class="check"><input type="checkbox" id="chatty"> Il parle (bulles)</label>
+    </section>
+
+    <section class="card">
+      <h2>Ce site</h2>
+      <p class="host" id="host">-</p>
+      <button id="toggle-site" class="btn-ghost">Desactiver sur ce site</button>
+    </section>
+
+    <p class="tip">Sur la page : <b>1 clic</b> caresse · <b>2 clics</b> le nourrit · <b>glisser</b> pour l'attraper et le lancer.</p>
+  </main>
+
+  <script src="popup.js"></script>
+</body>
+</html>
