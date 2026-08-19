@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <header>
+    <span class="logo">🔎</span>
+    <h1>ResearchFast<span>.Page</span></h1>
+  </header>
+
+  <section class="search">
+    <label class="field">
+      <span class="lbl">Qu'est-ce que tu cherches ?</span>
+      <input type="text" id="query" placeholder="casque bluetooth sans fil" autofocus>
+    </label>
+
+    <div class="sites" id="sites"></div>
+
+    <button id="go" class="btn-go">Chercher et scanner</button>
+    <button id="scan" class="btn-ghost">Scanner la page ouverte</button>
+    <p class="msg" id="msg"></p>
+  </section>
+
+  <details class="filters">
+    <summary>Filtres</summary>
+    <div class="row">
+      <label class="field small">
+        <span class="lbl">Prix min</span>
+        <input type="number" id="minPrice" placeholder="0" min="0">
+      </label>
+      <label class="field small">
+        <span class="lbl">Prix max</span>
+        <input type="number" id="maxPrice" placeholder="—" min="0">
+      </label>
+      <label class="field small">
+        <span class="lbl">Note mini</span>
+        <select id="minRating">
+          <option value="0">toutes</option>
+          <option value="3">3 ★</option>
+          <option value="4">4 ★</option>
+          <option value="4.5">4,5 ★</option>
+        </select>
+      </label>
+    </div>
+    <label class="field">
+      <span class="lbl">Exclure ces mots</span>
+      <input type="text" id="exclude" placeholder="reconditionné, étui, coque">
+    </label>
+    <label class="check"><input type="checkbox" id="noSponsored"> Masquer les résultats sponsorisés</label>
+    <label class="field">
+      <span class="lbl">Pays des boutiques</span>
+      <select id="region">
+        <option value="ca">Canada (.ca)</option>
+        <option value="com">États-Unis (.com)</option>
+        <option value="fr">France (.fr)</option>
+      </select>
+    </label>
+  </details>
+
+  <section class="results">
+    <div class="results-head">
+      <h2>Meilleures offres trouvées</h2>
+      <button id="clear" class="link">vider</button>
+    </div>
+    <div id="best"></div>
+  </section>
+
+  <script src="popup.js"></script>
+</body>
+</html>

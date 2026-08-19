@@ -2,9 +2,9 @@
 
 # Mes extensions Chrome
 
-**GameOpen** · **PageCustomer** · **PetPage**
+**GameOpen** · **PageCustomer** · **PetPage** · **ResearchFast.Page**
 
-Trois extensions Chrome faites maison, gratuites, sans publicité et sans collecte de données.
+Quatre extensions Chrome faites maison, gratuites, sans publicité et sans collecte de données.
 
 ### 👉 [**Page de téléchargement**](https://scgaming887-svg.github.io/mes-extensions-chrome/) 👈
 
@@ -12,7 +12,7 @@ Trois extensions Chrome faites maison, gratuites, sans publicité et sans collec
 
 ---
 
-## Les trois extensions
+## Les quatre extensions
 
 <table>
 <tr>
@@ -63,6 +63,23 @@ Un compagnon animé qui vit en bas de tes pages.
 
 </td>
 </tr>
+<tr>
+<td><img src="ResearchFast.Page/icons/icon128.png" width="64"></td>
+<td>
+
+### ResearchFast.Page
+Trouve la meilleure offre pour ce que tu cherches.
+
+- Tape ton article : l'extension ouvre la recherche sur Amazon, eBay et Marketplace d'un coup
+- Elle lit la page de résultats, en extrait titre, prix, note et nombre d'avis
+- Elle classe les annonces sur 100 en croisant **pertinence, prix, note et fiabilité**
+- Filtres : prix mini/maxi, note minimale, mots à exclure, masquer les sponsorisés
+- Écarte les accessoires : chercher « casque bluetooth » ne remonte pas les étuis pour casque
+- Panneau classé directement sur la page, et top 12 tous sites confondus dans le popup
+- Fonctionne aussi en mode générique sur les autres boutiques
+
+</td>
+</tr>
 </table>
 
 ---
@@ -107,13 +124,14 @@ pour PageCustomer et PetPage (leurs scripts s'injectent dans la page).
 GameOpen/         extension 1 — manifest, popup, mini-jeux
 PageCustomer/     extension 2 — manifest, popup, content script
 PetPage/          extension 3 — manifest, popup, compagnon animé
+ResearchFast.Page/  extension 4 — manifest, popup, lecteur de pages de vente
 docs/             la page de téléchargement publiée par GitHub Pages
 publier.bat       met le site à jour en ligne
 PRIVACY.md        politique de confidentialité
 PUBLICATION-WEBSTORE.md   marche à suivre si un jour on publie sur le Web Store
 ```
 
-Les trois extensions sont en **Manifest V3**, sans aucune dépendance ni outil de build :
+Les quatre extensions sont en **Manifest V3**, sans aucune dépendance ni outil de build :
 du HTML, du CSS et du JavaScript, lisibles tels quels.
 
 ---
