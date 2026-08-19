@@ -198,3 +198,9 @@
   background: #00d2a8 !important; border: 3px solid #141720 !important;
   box-shadow: 0 0 0 1px #00d2a8 !important; cursor: pointer !important;
 }
+#rfp-panel .rfp-mode {
+  margin-top: 7px !important; padding-top: 6px !important;
+  border-top: 1px solid #262c3c !important;
+  font-size: 10.5px !important; font-weight: 600 !important; color: #4da3ff !important;
+}
+#rfp-panel .rfp-mode:empty { display: none !important; }

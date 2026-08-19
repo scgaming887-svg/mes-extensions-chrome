@@ -81,8 +81,20 @@ function renderSites() {
   });
 }
 
+/* classement recalcule a chaque changement : la ponderation depend du budget */
+function ranked() {
+  return RFPRank.rank(merged(), cfg.query, cfg.filters, cfg.filters.maxPrice);
+}
+
+function refresh() {
+  const r = ranked();
+  renderResults(r);
+  renderBudget(r);
+}
+
 /* ---------- curseur de budget ---------- */
-function renderBudget() {
+function renderBudget(r) {
+  r = r || ranked();
   const slider = document.getElementById('budget');
   const val = document.getElementById('budget-val');
   const hint = document.getElementById('budget-hint');
@@ -92,7 +104,8 @@ function renderBudget() {
   val.className = 'budget-val' + (max == null ? ' no-limit' : '');
   slider.style.setProperty('--fill', Math.round((slider.value / LAST) * 100) + '%');
 
-  const all = merged();
+  const all = r.items;
+  document.getElementById('budget-mode').textContent = all.length ? r.mode.label : '';
   if (!all.length) {
     hint.textContent = 'Glisse pour ne garder que ce qui rentre dans ton budget.';
     return;
@@ -125,8 +138,7 @@ function fillForm() {
   document.getElementById('noSponsored').checked = !!cfg.filters.noSponsored;
   document.getElementById('region').value = cfg.region;
   renderSites();
-  renderResults();
-  renderBudget();
+  refresh();
 }
 
 function readForm() {
@@ -159,18 +171,19 @@ function merged() {
     const r = cfg.results[site];
     (r.items || []).forEach(it => all.push(Object.assign({ site: r.site }, it)));
   });
-  return all.sort((a, b) => (b.score || 0) - (a.score || 0));
+  return all;
 }
 
-function renderResults() {
+function renderResults(r) {
+  r = r || ranked();
   const box = document.getElementById('best');
   box.textContent = '';
 
   const max = cfg.filters.maxPrice;
-  const items = merged().filter(it => max == null || (it.price != null && it.price <= max));
+  const items = r.items.filter(it => max == null || (it.price != null && it.price <= max));
 
   if (!items.length) {
-    const scanned = merged().length;
+    const scanned = r.items.length;
     const e = document.createElement('div');
     e.className = 'empty';
     const b = document.createElement('b');
@@ -249,7 +262,7 @@ document.getElementById('go').addEventListener('click', () => {
   /* on repart d'une ardoise propre pour cette recherche */
   chrome.storage.local.set({ results: {}, pending: true }, () => {
     cfg.results = {};
-    renderResults();
+    refresh();
 
     cfg.sites.forEach((id, i) => {
       const url = SEARCH[id].url(cfg.query, cfg.region);
@@ -295,17 +308,17 @@ function inject(then) {
 document.getElementById('clear').addEventListener('click', () => {
   cfg.results = {};
   chrome.storage.local.set({ results: {} });
-  renderResults();
+  refresh();
 });
 
-document.addEventListener('input', () => { save(); renderBudget(); renderResults(); });
+document.addEventListener('input', () => { save(); refresh(); });
 
 document.getElementById('query').addEventListener('keydown', e => {
   if (e.key === 'Enter') document.getElementById('go').click();
 });
 
 chrome.storage.onChanged.addListener(ch => {
-  if (ch.results) { cfg.results = ch.results.newValue || {}; renderResults(); renderBudget(); }
+  if (ch.results) { cfg.results = ch.results.newValue || {}; refresh(); }
 });
 
 /* ============================================================

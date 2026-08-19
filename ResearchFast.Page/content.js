@@ -218,61 +218,7 @@ const SITES = [
 
 const SITE = SITES.find(s => s.test(location.hostname)) || SITES[SITES.length - 1];
 
-/* ============================================================
-   Classement
-   ============================================================ */
-function score(items, query, filters) {
-  const words = norm(query).split(/\s+/).filter(w => w.length > 1);
-  const bans = norm(filters.exclude || '').split(/[\s,]+/).filter(Boolean);
-
-  let kept = items.filter(it => {
-    const t = norm(it.title);
-    if (bans.some(b => t.includes(b))) return false;
-    if (filters.minPrice && it.price != null && it.price < filters.minPrice) return false;
-    /* le budget maximum n'est PAS applique ici : il est reglable en direct
-       au curseur, sans avoir a rescanner la page. */
-    if (filters.minRating && (it.rating || 0) < filters.minRating) return false;
-    if (filters.noSponsored && it.note === 'sponsorisé') return false;
-    return true;
-  });
-
-  /* pertinence : combien de mots de la recherche sont dans le titre */
-  kept.forEach(it => {
-    const t = norm(it.title);
-    const hits = words.filter(w => t.includes(w));
-    it.match = words.length ? hits.length / words.length : 1;
-    if (!words.length || !hits.length) return;
-
-    const firstHit = Math.min.apply(null, hits.map(w => t.indexOf(w)));
-    const accessory = t.search(/\b(pour|for|compatible|adapte)\b/);
-
-    /* "Étui de rangement POUR casque bluetooth" : les mots cherches arrivent
-       apres un "pour", c'est un accessoire, pas le produit demande. */
-    if (accessory > -1 && firstHit > accessory) it.match *= 0.4;
-    else if (firstHit <= 20) it.match = Math.min(1, it.match * 1.15);
-  });
-
-  if (words.length) {
-    /* un titre sans aucun mot de la recherche n'a rien a faire la */
-    kept = kept.filter(it => it.match > 0);
-    const strict = kept.filter(it => it.match >= 0.5);
-    if (strict.length >= 3) kept = strict;
-  }
-
-  const prices = kept.map(it => it.price).filter(p => p != null);
-  const lo = Math.min.apply(null, prices.length ? prices : [0]);
-  const hi = Math.max.apply(null, prices.length ? prices : [1]);
-  const span = hi - lo || 1;
-
-  kept.forEach(it => {
-    const cheap = it.price == null ? 0.35 : 1 - (it.price - lo) / span;
-    const stars = it.rating ? it.rating / 5 : 0.55;
-    const trust = it.reviews ? Math.min(1, Math.log10(it.reviews + 1) / 3.2) : 0.4;
-    it.score = Math.round((it.match * 0.34 + cheap * 0.38 + stars * 0.17 + trust * 0.11) * 100);
-  });
-
-  return kept.sort((a, b) => b.score - a.score);
-}
+/* Le classement vit dans rank.js, partage avec le popup. */
 
 /* ============================================================
    Le panneau
@@ -297,8 +243,17 @@ function stopIndex(value) {
   return best;
 }
 
-let panel = null;
-let state = { all: [], query: '', sort: 'score', budget: null };
+let panel = null, panelMode = null;
+let state = { raw: [], all: [], query: '', sort: 'score', budget: null, filters: {}, mode: null };
+
+/* Reclasse tout : la ponderation depend du budget, donc bouger le
+   curseur change l'ordre — mais sans jamais relire la page. */
+function rescore() {
+  const r = RFPRank.rank(state.raw, state.query, state.filters, state.budget);
+  state.all = r.items;
+  state.mode = r.mode;
+  state.cheapest = r.cheapest;
+}
 
 /* les annonces qui rentrent dans le budget courant */
 function visible() {
@@ -345,11 +300,15 @@ function buildPanel() {
   range.value = stopIndex(state.budget);
   range.addEventListener('input', () => {
     state.budget = STOPS[Number(range.value)];
+    rescore();
     paintBudget();
     renderList();
     saveBudget();
   });
-  bud.append(bTop, range);
+
+  const mode = el('div', 'rfp-mode');
+  bud.append(bTop, range, mode);
+  panelMode = mode;
 
   /* --- barre de tri --- */
   const bar = el('div', 'rfp-bar');
@@ -392,6 +351,7 @@ function paintBudget() {
   panel._bval.textContent = b == null ? 'sans limite' : b.toLocaleString('fr-CA') + ' $';
   panel._bval.classList.toggle('is-open', b == null);
   panel._range.style.setProperty('--fill', Math.round((panel._range.value / LAST) * 100) + '%');
+  if (panelMode && state.mode) panelMode.textContent = state.mode.label;
 }
 
 /* le budget suit dans le popup, et inversement */
@@ -513,8 +473,10 @@ function run(silent) {
 
     const filters = cfg.filters || {};
     state.query = cfg.query || '';
+    state.filters = filters;
     state.budget = filters.maxPrice != null ? filters.maxPrice : null;
-    state.all = score(raw, state.query, filters);
+    state.raw = raw;
+    rescore();
 
     /* on enregistre la liste complete, pas celle filtree par le budget :
        le curseur du popup doit pouvoir la reparcourir sans rescanner. */
@@ -557,6 +519,8 @@ chrome.storage.onChanged.addListener(ch => {
   const value = max != null ? max : null;
   if (value === state.budget) return;
   state.budget = value;
+  state.filters = ch.filters.newValue || state.filters;
+  rescore();
   panel._range.value = stopIndex(value);
   paintBudget();
   renderList();
