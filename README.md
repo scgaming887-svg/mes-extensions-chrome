@@ -78,7 +78,9 @@ Trouve la meilleure offre pour ce que tu cherches.
 - **Curseur de budget** : glisse pour fixer ton prix max, les résultats se refiltrent instantanément — sans rescanner. Il est présent dans le popup comme dans le panneau, et les deux restent synchronisés
 - Filtres : prix minimum, note minimale, mots à exclure, masquer les sponsorisés
 - Écarte les accessoires : chercher « casque bluetooth » ne remonte pas les étuis pour casque
-- Panneau classé directement sur la page, et top 12 tous sites confondus dans le popup
+- **Page de comparaison** : une colonne par site, remplie au fur et à mesure que les onglets se scannent — plus besoin de visiter chaque onglet un par un
+- **La note veut dire ce qu'elle dit** : Amazon note le produit, eBay note le **vendeur** (son % d'avis positifs et son nombre de ventes), Marketplace ne publie rien sur ses pages de résultats. Chaque note est étiquetée et colorée selon sa nature
+- Panneau classé directement sur la page, et résultats groupés par site dans le popup
 - Fonctionne aussi en mode générique sur les autres boutiques
 
 </td>

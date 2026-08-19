@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <title>ResearchFast — comparaison</title>
+  <link rel="icon" href="icons/icon48.png">
+  <link rel="stylesheet" href="results.css">
+</head>
+<body>
+  <header>
+    <div class="bar">
+      <div class="brand">
+        <span class="logo">🔎</span>
+        <div>
+          <h1>ResearchFast<span>.Page</span></h1>
+          <p class="query" id="query">—</p>
+        </div>
+      </div>
+
+      <div class="budget">
+        <div class="budget-top">
+          <span class="lbl">Budget maximum</span>
+          <span class="budget-val" id="budget-val">sans limite</span>
+        </div>
+        <input type="range" id="budget" min="0" max="63" step="1" value="63">
+        <div class="mode" id="mode"></div>
+      </div>
+
+      <div class="tools">
+        <label class="lbl" for="sort">Trier par</label>
+        <select id="sort">
+          <option value="score">Meilleure offre</option>
+          <option value="price">Prix croissant</option>
+          <option value="rating">Mieux notés</option>
+        </select>
+        <button id="reload" class="btn">↻ Recharger</button>
+      </div>
+    </div>
+
+    <div class="summary" id="summary"></div>
+  </header>
+
+  <main id="columns"></main>
+
+  <footer>
+    <p>
+      Les notes ne veulent pas dire la même chose selon le site :
+      <b class="k-product">Amazon note le produit</b>,
+      <b class="k-seller">eBay note le vendeur</b>,
+      <b class="k-none">Marketplace ne publie aucune note sur ses pages de résultats</b>.
+      Les scores restent comparables car une note inconnue est traitée comme neutre.
+    </p>
+  </footer>
+
+  <script src="rank.js"></script>
+  <script src="results.js"></script>
+</body>
+</html>

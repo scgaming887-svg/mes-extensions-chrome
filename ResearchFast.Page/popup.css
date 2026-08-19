@@ -162,3 +162,21 @@ input[type=range]:active::-webkit-slider-thumb { transform: scale(1.12); }
   font-size: 10.5px; font-weight: 600; color: var(--accent-2);
 }
 .budget-mode:empty { display: none; }
+
+.head-btns { display: flex; gap: 10px; }
+.link.strong { color: var(--accent); font-weight: 600; }
+.link.strong:hover { color: var(--accent-2); }
+
+/* ---- regroupement par site ---- */
+.site-group { margin-bottom: 12px; }
+.site-group:last-child { margin-bottom: 0; }
+.site-head {
+  display: flex; align-items: center; gap: 7px;
+  margin-bottom: 6px; font-size: 11px; font-weight: 700; color: var(--text);
+}
+.site-head .ic { font-size: 13px; }
+.site-head .n { flex: 1; }
+.site-head .c { font-weight: 500; color: var(--muted); }
+.res .k-product { color: #ffc857; }
+.res .k-seller { color: #7ee0a0; }
+.res .k-none { color: #6a7288; font-style: italic; }

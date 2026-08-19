@@ -166,12 +166,7 @@ function save() {
 
 /* fusionne les annonces de tous les sites deja scannes */
 function merged() {
-  const all = [];
-  Object.keys(cfg.results || {}).forEach(site => {
-    const r = cfg.results[site];
-    (r.items || []).forEach(it => all.push(Object.assign({ site: r.site }, it)));
-  });
-  return all;
+  return RFPRank.merge(cfg.results);
 }
 
 function renderResults(r) {
@@ -202,44 +197,79 @@ function renderResults(r) {
     return;
   }
 
-  items.slice(0, 12).forEach((it, i) => {
-    const a = document.createElement('a');
-    a.className = 'res' + (i === 0 ? ' top' : '');
-    a.href = it.url;
-    a.target = '_blank';
-    a.rel = 'noopener';
+  /* un seul site scanne : liste simple. Plusieurs : une section par site. */
+  const ids = [];
+  items.forEach(it => { if (ids.indexOf(it.siteId) === -1) ids.push(it.siteId); });
 
-    if (it.img) {
-      const im = document.createElement('img');
-      im.src = it.img;
-      a.appendChild(im);
-    } else {
-      const d = document.createElement('div');
-      d.className = 'noimg';
-      d.textContent = '📦';
-      a.appendChild(d);
-    }
+  if (ids.length < 2) {
+    items.slice(0, 12).forEach((it, i) => box.appendChild(offer(it, i === 0)));
+    return;
+  }
 
-    const mid = document.createElement('div');
-    mid.className = 'mid';
-    const t = document.createElement('div');
-    t.className = 't';
-    t.textContent = it.title;
-    const m = document.createElement('div');
-    m.className = 'm';
-    m.textContent = [it.site, it.rating ? '★ ' + it.rating.toFixed(1) : null, it.note || null]
-      .filter(Boolean).join(' · ');
-    mid.append(t, m);
+  ids.forEach(id => {
+    const meta = RFPRank.SITES_META[id] || { name: id, icon: '🛍️' };
+    const mine = items.filter(it => it.siteId === id);
 
-    const p = document.createElement('div');
-    p.className = 'p';
-    p.textContent = it.price == null ? '—'
-      : it.price === 0 ? 'Gratuit'
-      : it.price.toLocaleString('fr-CA', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' $';
+    const g = document.createElement('div');
+    g.className = 'site-group';
 
-    a.append(mid, p);
-    box.appendChild(a);
+    const head = document.createElement('div');
+    head.className = 'site-head';
+    const ic = document.createElement('span'); ic.className = 'ic'; ic.textContent = meta.icon;
+    const nm = document.createElement('span'); nm.className = 'n'; nm.textContent = meta.name;
+    const ct = document.createElement('span'); ct.className = 'c';
+    ct.textContent = mine.length + (mine.length > 1 ? ' offres' : ' offre');
+    head.append(ic, nm, ct);
+    g.appendChild(head);
+
+    mine.slice(0, 3).forEach((it, i) => g.appendChild(offer(it, i === 0)));
+    box.appendChild(g);
   });
+}
+
+/* une ligne de resultat */
+function offer(it, top) {
+  const a = document.createElement('a');
+  a.className = 'res' + (top ? ' top' : '');
+  a.href = it.url;
+  a.target = '_blank';
+  a.rel = 'noopener';
+  a.title = 'Score ' + it.score + '/100';
+
+  if (it.img) {
+    const im = document.createElement('img');
+    im.src = it.img;
+    a.appendChild(im);
+  } else {
+    const d = document.createElement('div');
+    d.className = 'noimg';
+    d.textContent = '📦';
+    a.appendChild(d);
+  }
+
+  const mid = document.createElement('div');
+  mid.className = 'mid';
+  const t = document.createElement('div');
+  t.className = 't';
+  t.textContent = it.title;
+
+  const m = document.createElement('div');
+  m.className = 'm';
+  const lab = RFPRank.ratingLabel(it);
+  const k = document.createElement('span');
+  k.className = 'k-' + lab.kind;
+  k.textContent = lab.text;
+  m.appendChild(k);
+  if (it.note) m.appendChild(document.createTextNode(' · ' + it.note));
+  mid.append(t, m);
+
+  const p = document.createElement('div');
+  p.className = 'p';
+  p.textContent = it.price == null ? '—' : it.price === 0 ? 'Gratuit'
+    : it.price.toLocaleString('fr-CA', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' $';
+
+  a.append(mid, p);
+  return a;
 }
 
 function flash(text) {
@@ -264,11 +294,18 @@ document.getElementById('go').addEventListener('click', () => {
     cfg.results = {};
     refresh();
 
+    /* plusieurs sites : la page de comparaison passe devant et se remplit
+       toute seule pendant que les onglets de recherche scannent en fond. */
+    const compare = cfg.sites.length > 1;
+    if (compare) chrome.tabs.create({ url: chrome.runtime.getURL('results.html'), active: true });
+
     cfg.sites.forEach((id, i) => {
       const url = SEARCH[id].url(cfg.query, cfg.region);
-      chrome.tabs.create({ url, active: i === 0 });
+      chrome.tabs.create({ url, active: !compare && i === 0 });
     });
-    flash('Recherche lancée sur ' + cfg.sites.length + ' site(s).');
+    flash(compare
+      ? 'Comparaison de ' + cfg.sites.length + ' sites en cours...'
+      : 'Recherche lancée sur 1 site.');
     setTimeout(() => window.close(), 600);
   });
 });
@@ -304,6 +341,11 @@ function inject(then) {
     });
   });
 }
+
+document.getElementById('compare').addEventListener('click', () => {
+  chrome.tabs.create({ url: chrome.runtime.getURL('results.html') });
+  window.close();
+});
 
 document.getElementById('clear').addEventListener('click', () => {
   cfg.results = {};

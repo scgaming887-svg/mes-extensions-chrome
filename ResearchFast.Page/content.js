@@ -50,6 +50,26 @@ const first = (root, selectors) => {
   return null;
 };
 
+/* Note d'un VENDEUR (eBay) : "pseudo (1 234) 99,2%".
+   On la ramene sur 5 etoiles : 90 % -> 0, 95 % -> 2,5, 100 % -> 5.
+   En dessous de 95 %, sur eBay, c'est reellement mauvais. */
+function sellerOf(card, selectors) {
+  const el = first(card, selectors);
+  const text = txt(el) || txt(card);
+  const m = text.match(/\(([\d\s.,]+)\)\s*([\d.,]+)\s*%/);
+  if (!m) return null;
+
+  const count = parsePrice(m[1]);
+  const pct = parsePrice(m[2]);
+  if (pct == null || pct > 100) return null;
+
+  return {
+    pct,
+    count: count || null,
+    rating: Math.max(0, Math.min(5, ((pct - 90) / 10) * 5))
+  };
+}
+
 /* ============================================================
    Lecteurs par site
    ============================================================ */
@@ -89,6 +109,7 @@ const SITES = [
           img: img ? img.src : '',
           rating: rating && rating <= 5 ? rating : null,
           reviews: reviews || null,
+          ratingKind: 'product',        /* Amazon : note de la fiche produit */
           note: sponsored ? 'sponsorisé' : ''
         });
       });
@@ -111,11 +132,19 @@ const SITES = [
         const img = first(card, ['.s-item__image img', 'img']);
         const ship = txt(first(card, ['.s-item__shipping', '.s-item__logisticsCost']));
 
+        /* Sur eBay ce qui compte c'est le VENDEUR, pas la fiche produit :
+           "pseudo (1 234) 99,2%" -> 1234 ventes, 99,2 % d'avis positifs. */
+        const seller = sellerOf(card, ['.s-item__seller-info-text', '.s-item__seller-info',
+                                       '.s-card__seller-info']);
+
         out.push({
           title, price,
           url: link ? link.href : location.href,
           img: img ? (img.src || img.dataset.src || '') : '',
-          rating: null, reviews: null,
+          rating: seller ? seller.rating : null,
+          reviews: seller ? seller.count : null,
+          sellerPct: seller ? seller.pct : null,
+          ratingKind: seller ? 'seller' : 'none',
           note: /gratuit|free/i.test(ship) ? 'livraison gratuite' : ''
         });
       });
@@ -161,7 +190,9 @@ const SITES = [
           title, price,
           url: link.href,
           img: img ? img.src : '',
-          rating: null, reviews: null,
+          /* Marketplace n'affiche pas la note du vendeur dans les resultats :
+             elle n'existe que sur la fiche de l'annonce. */
+          rating: null, reviews: null, ratingKind: 'none',
           note: place
         });
       });
@@ -208,7 +239,7 @@ const SITES = [
         out.push({
           title, price, url,
           img: img ? img.src : '',
-          rating: null, reviews: null, note: ''
+          rating: null, reviews: null, ratingKind: 'none', note: ''
         });
       });
       return out.slice(0, 120);
@@ -419,8 +450,9 @@ function renderList() {
     mid.appendChild(el('div', 'rfp-title', it.title));
 
     const meta = el('div', 'rfp-meta');
-    if (it.rating) meta.appendChild(el('span', 'rfp-star', '★ ' + it.rating.toFixed(1)));
-    if (it.reviews) meta.appendChild(el('span', null, '(' + it.reviews.toLocaleString('fr-CA') + ')'));
+    const lab = RFPRank.ratingLabel(it);
+    meta.appendChild(el('span', 'rfp-star is-' + lab.kind, lab.text));
+    if (lab.sub) meta.appendChild(el('span', null, lab.sub));
     if (it.note) meta.appendChild(el('span', 'rfp-note', it.note));
     meta.appendChild(el('span', 'rfp-badge', SITE.name));
     mid.appendChild(meta);

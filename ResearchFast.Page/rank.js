@@ -12,6 +12,24 @@ var RFPRank = (function () {
 
   const norm = s => (s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
 
+  /* les sites connus, au meme endroit pour les trois interfaces */
+  const SITES_META = {
+    amazon:   { name: 'Amazon',      icon: '📦', rates: 'le produit' },
+    ebay:     { name: 'eBay',        icon: '🏷️', rates: 'le vendeur' },
+    facebook: { name: 'Marketplace', icon: '🛒', rates: 'rien' },
+    generic:  { name: 'Autre site',  icon: '🛍️', rates: 'rien' }
+  };
+
+  /* rassemble les annonces de tous les sites deja scannes */
+  function merge(results) {
+    const all = [];
+    Object.keys(results || {}).forEach(id => {
+      const r = results[id] || {};
+      (r.items || []).forEach(it => all.push(Object.assign({ siteId: id, site: r.site }, it)));
+    });
+    return all;
+  }
+
   function median(nums) {
     if (!nums.length) return null;
     const a = nums.slice().sort((x, y) => x - y);
@@ -138,7 +156,28 @@ var RFPRank = (function () {
     };
   }
 
-  return { rank, weights, qualityOf, norm, median };
+  /* ---------- comment afficher la note, selon sa nature ----------
+     Amazon note le produit, eBay note le vendeur, Marketplace ne note rien.
+     Les melanger sans le dire serait trompeur. */
+  function ratingLabel(it) {
+    if (it.ratingKind === 'seller' && it.sellerPct != null) {
+      return {
+        kind: 'seller',
+        text: 'vendeur ' + String(it.sellerPct).replace('.', ',') + ' %',
+        sub: it.reviews ? it.reviews.toLocaleString('fr-CA') + ' ventes' : ''
+      };
+    }
+    if (it.rating != null) {
+      return {
+        kind: 'product',
+        text: '★ ' + it.rating.toFixed(1),
+        sub: it.reviews ? it.reviews.toLocaleString('fr-CA') + ' avis' : ''
+      };
+    }
+    return { kind: 'none', text: 'vendeur non noté', sub: '' };
+  }
+
+  return { rank, weights, qualityOf, ratingLabel, merge, norm, median, SITES_META };
 })();
 
 /* utilisable aussi bien dans le popup que dans la page */
