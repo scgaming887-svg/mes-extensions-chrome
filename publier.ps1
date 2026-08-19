@@ -2,8 +2,11 @@
 #  Met la page de telechargement en ligne sur GitHub Pages
 #  Lance-moi en double-cliquant sur publier.bat
 # ============================================================
+#  Note : on passe par "cmd /c ... >nul 2>&1" pour les tests
+#  silencieux. Rediriger la sortie d'erreur d'un .exe directement
+#  en PowerShell 5.1 la transforme en erreur fatale.
+# ============================================================
 
-$ErrorActionPreference = "Stop"
 $repo = "mes-extensions-chrome"
 Set-Location "C:\Users\PC\WebExtensions"
 
@@ -27,43 +30,57 @@ if ($ok -ne "o" -and $ok -ne "O") { Write-Host "  Annule."; Read-Host "  Entree 
 # ---- 1. connexion ----
 Write-Host ""
 Write-Host "  [1/4] Connexion a GitHub..." -ForegroundColor Cyan
-gh auth status 2>$null | Out-Null
+cmd /c "gh auth status >nul 2>&1"
 if ($LASTEXITCODE -ne 0) {
-  Write-Host "  Une fenetre de navigateur va s'ouvrir. Choisis :" -ForegroundColor Yellow
-  Write-Host "    GitHub.com  ->  HTTPS  ->  Login with a web browser" -ForegroundColor Yellow
-  gh auth login
-  if ($LASTEXITCODE -ne 0) { Write-Host "  Connexion echouee." -ForegroundColor Red; Read-Host "  Entree pour fermer"; exit }
+  Write-Host ""
+  Write-Host "  Un code du type XXXX-XXXX va s'afficher juste en dessous." -ForegroundColor Yellow
+  Write-Host "  1. Note-le" -ForegroundColor Yellow
+  Write-Host "  2. Appuie sur Entree : ton navigateur s'ouvre" -ForegroundColor Yellow
+  Write-Host "  3. Colle le code, puis clique 'Authorize github'" -ForegroundColor Yellow
+  Write-Host ""
+  gh auth login --hostname github.com --git-protocol https --web
+  cmd /c "gh auth status >nul 2>&1"
+  if ($LASTEXITCODE -ne 0) {
+    Write-Host "  Connexion echouee." -ForegroundColor Red
+    Read-Host "  Entree pour fermer"; exit
+  }
 }
-$user = (gh api user -q .login).Trim()
+$user = (gh api user -q .login)
+if (-not $user) { Write-Host "  Impossible de lire le pseudo GitHub." -ForegroundColor Red; Read-Host; exit }
+$user = $user.Trim()
 Write-Host "  Connecte en tant que $user" -ForegroundColor Green
 
 # ---- 2. depot ----
 Write-Host ""
 Write-Host "  [2/4] Creation du depot..." -ForegroundColor Cyan
 git branch -M main
-$exists = $false
-gh repo view "$user/$repo" 2>$null | Out-Null
-if ($LASTEXITCODE -eq 0) { $exists = $true }
 
-if ($exists) {
+cmd /c "gh repo view $user/$repo >nul 2>&1"
+if ($LASTEXITCODE -eq 0) {
   Write-Host "  Le depot existe deja, mise a jour." -ForegroundColor Yellow
-  git remote remove origin 2>$null
+  cmd /c "git remote remove origin >nul 2>&1"
   git remote add origin "https://github.com/$user/$repo.git"
   git push -u origin main --force
 } else {
-  gh repo create $repo --public --source=. --remote=origin --push `
-    --description "GameOpen, PageCustomer et PetPage - 3 extensions Chrome"
+  gh repo create $repo --public --source=. --remote=origin --push --description "GameOpen, PageCustomer et PetPage - 3 extensions Chrome"
 }
-if ($LASTEXITCODE -ne 0) { Write-Host "  Echec de l'envoi." -ForegroundColor Red; Read-Host "  Entree pour fermer"; exit }
+if ($LASTEXITCODE -ne 0) {
+  Write-Host "  Echec de l'envoi des fichiers." -ForegroundColor Red
+  Read-Host "  Entree pour fermer"; exit
+}
 
 # ---- 3. GitHub Pages ----
 Write-Host ""
 Write-Host "  [3/4] Activation de GitHub Pages..." -ForegroundColor Cyan
-$body = '{"source":{"branch":"main","path":"/docs"}}'
-$body | gh api --method POST "repos/$user/$repo/pages" --input - 2>$null | Out-Null
+$tmp = Join-Path $env:TEMP "pages-source.json"
+'{"source":{"branch":"main","path":"/docs"}}' | Out-File -FilePath $tmp -Encoding ascii -NoNewline
+cmd /c "gh api --method POST repos/$user/$repo/pages --input `"$tmp`" >nul 2>&1"
 if ($LASTEXITCODE -ne 0) {
-  # deja active : on met juste a jour la source
-  $body | gh api --method PUT "repos/$user/$repo/pages" --input - 2>$null | Out-Null
+  cmd /c "gh api --method PUT repos/$user/$repo/pages --input `"$tmp`" >nul 2>&1"
+}
+if ($LASTEXITCODE -ne 0) {
+  Write-Host "  Pages n'a pas pu etre active automatiquement." -ForegroundColor Yellow
+  Write-Host "  Fais-le a la main : Settings > Pages > Branch: main, dossier /docs" -ForegroundColor Yellow
 }
 
 # ---- 4. resultat ----
