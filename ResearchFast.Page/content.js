@@ -23,7 +23,11 @@ const norm = s => (s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '
 function parsePrice(text) {
   if (!text) return null;
   const t = String(text).replace(/ /g, ' ');
-  const m = t.match(/(\d{1,3}(?:[ .,]\d{3})*(?:[.,]\d{1,2})?|\d+(?:[.,]\d{1,2})?)/);
+  /* Le premier motif exige un separateur de milliers ("1 299,99", "1,299.99").
+     Sans cette exigence, "8822" etait coupe a "882" : \d{1,3} s'arretait a
+     trois chiffres et la suite devenait facultative. Le second motif prend
+     tout le reste ("8822", "1299.99", "99,2"). */
+  const m = t.match(/(\d{1,3}(?:[ .,]\d{3})+(?:[.,]\d{1,2})?|\d+(?:[.,]\d{1,2})?)/);
   if (!m) return null;
 
   let s = m[1];
@@ -54,20 +58,40 @@ const first = (root, selectors) => {
    On la ramene sur 5 etoiles : 90 % -> 0, 95 % -> 2,5, 100 % -> 5.
    En dessous de 95 %, sur eBay, c'est reellement mauvais. */
 function sellerOf(card, selectors) {
-  const el = first(card, selectors);
-  const text = txt(el) || txt(card);
-  const m = text.match(/\(([\d\s.,]+)\)\s*([\d.,]+)\s*%/);
-  if (!m) return null;
+  const RE = /\(([\d\s.,]+)\)\s*([\d.,]+)\s*%/;
 
-  const count = parsePrice(m[1]);
-  const pct = parsePrice(m[2]);
-  if (pct == null || pct > 100) return null;
+  /* on teste chaque piste, puis le texte entier de la carte : eBay change
+     regulierement ses classes et n affiche pas toujours le vendeur. */
+  const pistes = [];
+  selectors.forEach(s => {
+    const el = card.querySelector && card.querySelector(s);
+    if (el) pistes.push(txt(el));
+  });
+  pistes.push(txt(card));
 
-  return {
-    pct,
-    count: count || null,
-    rating: Math.max(0, Math.min(5, ((pct - 90) / 10) * 5))
-  };
+  for (let i = 0; i < pistes.length; i++) {
+    const m = pistes[i] && pistes[i].match(RE);
+    if (!m) continue;
+    const count = parsePrice(m[1]);
+    const pct = parsePrice(m[2]);
+    /* sous 50 %, c est un rabais mal lu, pas une note de vendeur */
+    if (pct == null || pct > 100 || pct < 50) continue;
+    return {
+      pct,
+      count: count || null,
+      rating: Math.max(0, Math.min(5, ((pct - 90) / 10) * 5))
+    };
+  }
+  return null;
+}
+
+/* eBay colle des mentions d accessibilite a la fin des titres */
+function cleanTitle(t) {
+  return String(t || '')
+    .replace(/opens? in a new (window|tab).*$/i, '')
+    .replace(/ouvre dans (un|une) nouve.*$/i, '')
+    .replace(/^(new listing|nouvelle annonce)\s*/i, '')
+    .trim();
 }
 
 /* ============================================================
@@ -124,7 +148,7 @@ const SITES = [
     parse() {
       const out = [];
       document.querySelectorAll('li.s-item, li.s-card, .srp-results li[data-viewport]').forEach(card => {
-        const title = txt(first(card, ['.s-item__title', '.s-card__title', 'h3']));
+        const title = cleanTitle(txt(first(card, ['.s-item__title', '.s-card__title', 'h3'])));
         if (!title || /^shop on ebay$/i.test(title)) return;
 
         const price = parsePrice(txt(first(card, ['.s-item__price', '.s-card__price'])));
@@ -135,7 +159,7 @@ const SITES = [
         /* Sur eBay ce qui compte c'est le VENDEUR, pas la fiche produit :
            "pseudo (1 234) 99,2%" -> 1234 ventes, 99,2 % d'avis positifs. */
         const seller = sellerOf(card, ['.s-item__seller-info-text', '.s-item__seller-info',
-                                       '.s-card__seller-info']);
+                                       '.s-card__seller-info', '.s-card__attribute-row']);
 
         out.push({
           title, price,
@@ -183,7 +207,12 @@ const SITES = [
           .filter(l => l !== priceLine && l.length > 3)
           .sort((a, b) => b.length - a.length)[0] || lines[0];
 
-        const place = lines.find(l => l !== title && l !== priceLine && l.length < 40) || '';
+        /* "80 $CA" est un ancien prix, pas un lieu : on ecarte tout ce qui
+           ressemble a un montant avant de chercher la ville. */
+        const looksPrice = l => /[$€£]/.test(l)
+                             || /^\s*[\d\s.,]+\s*$/.test(l)
+                             || /^(gratuit|free)$/i.test(l);
+        const place = lines.find(l => l !== title && l !== priceLine && !looksPrice(l) && l.length < 40) || '';
         const img = link.querySelector('img');
 
         out.push({
@@ -254,25 +283,8 @@ const SITE = SITES.find(s => s.test(location.hostname)) || SITES[SITES.length - 
 /* ============================================================
    Le panneau
    ============================================================ */
-/* mêmes paliers que dans le popup : fins en bas, larges en haut, puis "sans limite" */
-const STOPS = (function () {
-  const s = [];
-  for (let v = 5;    v < 50;    v += 5)   s.push(v);
-  for (let v = 50;   v < 200;   v += 10)  s.push(v);
-  for (let v = 200;  v < 500;   v += 25)  s.push(v);
-  for (let v = 500;  v < 1000;  v += 50)  s.push(v);
-  for (let v = 1000; v <= 5000; v += 250) s.push(v);
-  s.push(null);
-  return s;
-})();
-const LAST = STOPS.length - 1;
-
-function stopIndex(value) {
-  if (value == null) return LAST;
-  let best = 0;
-  for (let i = 0; i < LAST; i++) if (Math.abs(STOPS[i] - value) < Math.abs(STOPS[best] - value)) best = i;
-  return best;
-}
+/* paliers du curseur : definis une seule fois dans rank.js */
+const STOPS = RFPRank.STOPS, LAST = RFPRank.LAST, stopIndex = RFPRank.stopIndex;
 
 let panel = null, panelMode = null;
 let state = { raw: [], all: [], query: '', sort: 'score', budget: null, filters: {}, mode: null };
@@ -325,10 +337,7 @@ function buildPanel() {
   const range = document.createElement('input');
   range.type = 'range';
   range.className = 'rfp-range';
-  range.min = 0;
-  range.max = LAST;
-  range.step = 1;
-  range.value = stopIndex(state.budget);
+  RFPRank.setupSlider(range, state.budget);
   range.addEventListener('input', () => {
     state.budget = STOPS[Number(range.value)];
     rescore();
@@ -451,8 +460,10 @@ function renderList() {
 
     const meta = el('div', 'rfp-meta');
     const lab = RFPRank.ratingLabel(it);
-    meta.appendChild(el('span', 'rfp-star is-' + lab.kind, lab.text));
-    if (lab.sub) meta.appendChild(el('span', null, lab.sub));
+    if (lab) {
+      meta.appendChild(el('span', 'rfp-star is-' + lab.kind, lab.text));
+      if (lab.sub) meta.appendChild(el('span', null, lab.sub));
+    }
     if (it.note) meta.appendChild(el('span', 'rfp-note', it.note));
     meta.appendChild(el('span', 'rfp-badge', SITE.name));
     mid.appendChild(meta);
@@ -489,7 +500,7 @@ function loadMore() {
    Scan
    ============================================================ */
 function run(silent) {
-  chrome.storage.local.get({ query: '', filters: {}, results: {} }, cfg => {
+  chrome.storage.local.get({ query: '', filters: {}, results: {}, searchStamp: 0 }, cfg => {
     let raw = [];
     try {
       raw = SITE.parse() || [];
@@ -507,6 +518,7 @@ function run(silent) {
     state.query = cfg.query || '';
     state.filters = filters;
     state.budget = filters.maxPrice != null ? filters.maxPrice : null;
+    raw.forEach(it => { it.siteId = SITE.id; });
     state.raw = raw;
     rescore();
 
@@ -516,10 +528,11 @@ function run(silent) {
     results[SITE.id] = {
       site: SITE.name,
       url: location.href,
+      stamp: cfg.searchStamp,   /* quelle recherche a produit ces resultats */
       when: Date.now(),
       items: state.all.slice(0, 40)
     };
-    chrome.storage.local.set({ results, pending: false });
+    chrome.storage.local.set({ results });
 
     buildPanel();
     renderList();
@@ -539,8 +552,15 @@ function launcher() {
 /* ============================================================
    Demarrage
    ============================================================ */
-chrome.storage.local.get({ query: '', pending: false }, cfg => {
-  if (cfg.pending && cfg.query) setTimeout(() => run(true), SITE.delay);
+/* Chaque onglet decide seul s'il doit se scanner : on compare le marqueur
+   de la recherche en cours a celui deja enregistre pour CE site. Avant, le
+   premier site termine effacait un drapeau commun et les onglets plus lents
+   (Amazon surtout) ne se scannaient jamais. */
+chrome.storage.local.get({ query: '', searchStamp: 0, results: {} }, cfg => {
+  const mine = (cfg.results || {})[SITE.id];
+  const aFaire = cfg.searchStamp && cfg.query &&
+                 (!mine || mine.stamp !== cfg.searchStamp || mine.url !== location.href);
+  if (aFaire) setTimeout(() => run(true), SITE.delay);
   else launcher();
 });
 

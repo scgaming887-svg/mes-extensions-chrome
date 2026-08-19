@@ -75,7 +75,7 @@ Trouve la meilleure offre pour ce que tu cherches.
 - Elle classe les annonces sur 100 en croisant **pertinence, prix, note et fiabilité**
 - **La pondération suit ton budget** : budget serré → le prix décide (47 %) ; budget dans la moyenne → prix et qualité à parts égales ; budget confortable → la qualité décide (52 %). Le mode actif est affiché en clair sous le curseur
 - Un article noté sous 3,5 ★ ne prend jamais la première place, même bradé
-- **Curseur de budget** : glisse pour fixer ton prix max, les résultats se refiltrent instantanément — sans rescanner. Il est présent dans le popup comme dans le panneau, et les deux restent synchronisés
+- **Curseur de budget jusqu'à 100 000 $** : glisse pour fixer ton prix max, les résultats se refiltrent instantanément — sans rescanner. Il est présent dans le popup comme dans le panneau, et les deux restent synchronisés
 - Filtres : prix minimum, note minimale, mots à exclure, masquer les sponsorisés
 - Écarte les accessoires : chercher « casque bluetooth » ne remonte pas les étuis pour casque
 - **Page de comparaison** : une colonne par site, remplie au fur et à mesure que les onglets se scannent — plus besoin de visiter chaque onglet un par un

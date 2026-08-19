@@ -8,7 +8,7 @@ const DEFAULTS = {
   filters: { minPrice: null, maxPrice: null, minRating: 0, exclude: '', noSponsored: false },
   region: 'ca',
   results: {},
-  pending: false
+  searchStamp: 0
 };
 
 /* adresses de recherche par site et par pays */
@@ -27,26 +27,8 @@ const SEARCH = {
   }
 };
 
-/* Paliers du curseur : fins sur les petits prix, larges ensuite,
-   et une derniere position "sans limite". */
-const STOPS = (function () {
-  const s = [];
-  for (let v = 5;    v < 50;    v += 5)   s.push(v);
-  for (let v = 50;   v < 200;   v += 10)  s.push(v);
-  for (let v = 200;  v < 500;   v += 25)  s.push(v);
-  for (let v = 500;  v < 1000;  v += 50)  s.push(v);
-  for (let v = 1000; v <= 5000; v += 250) s.push(v);
-  s.push(null);
-  return s;
-})();
-const LAST = STOPS.length - 1;
-
-const stopIndex = value => {
-  if (value == null) return LAST;
-  let best = 0;
-  for (let i = 0; i < LAST; i++) if (Math.abs(STOPS[i] - value) < Math.abs(STOPS[best] - value)) best = i;
-  return best;
-};
+/* paliers du curseur : definis une seule fois dans rank.js */
+const STOPS = RFPRank.STOPS, LAST = RFPRank.LAST, stopIndex = RFPRank.stopIndex;
 
 const euros = v => v.toLocaleString('fr-CA') + ' $';
 
@@ -131,7 +113,7 @@ function renderBudget(r) {
 
 function fillForm() {
   document.getElementById('query').value = cfg.query;
-  document.getElementById('budget').value = stopIndex(cfg.filters.maxPrice);
+  RFPRank.setupSlider(document.getElementById('budget'), cfg.filters.maxPrice);
   document.getElementById('minPrice').value = cfg.filters.minPrice != null ? cfg.filters.minPrice : '';
   document.getElementById('minRating').value = cfg.filters.minRating || 0;
   document.getElementById('exclude').value = cfg.filters.exclude || '';
@@ -256,10 +238,12 @@ function offer(it, top) {
   const m = document.createElement('div');
   m.className = 'm';
   const lab = RFPRank.ratingLabel(it);
-  const k = document.createElement('span');
-  k.className = 'k-' + lab.kind;
-  k.textContent = lab.text;
-  m.appendChild(k);
+  if (lab) {
+    const k = document.createElement('span');
+    k.className = 'k-' + lab.kind;
+    k.textContent = lab.text;
+    m.appendChild(k);
+  }
   if (it.note) m.appendChild(document.createTextNode(' · ' + it.note));
   mid.append(t, m);
 
@@ -290,7 +274,8 @@ document.getElementById('go').addEventListener('click', () => {
   if (!cfg.sites.length) { flash('Choisis au moins un site.'); return; }
 
   /* on repart d'une ardoise propre pour cette recherche */
-  chrome.storage.local.set({ results: {}, pending: true }, () => {
+  /* marqueur unique de cette recherche : chaque site scanne une fois pour lui */
+  chrome.storage.local.set({ results: {}, searchStamp: Date.now() }, () => {
     cfg.results = {};
     refresh();
 

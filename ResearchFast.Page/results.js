@@ -11,24 +11,8 @@ const DEFAULTS = {
   results: {}
 };
 
-const STOPS = (function () {
-  const s = [];
-  for (let v = 5;    v < 50;    v += 5)   s.push(v);
-  for (let v = 50;   v < 200;   v += 10)  s.push(v);
-  for (let v = 200;  v < 500;   v += 25)  s.push(v);
-  for (let v = 500;  v < 1000;  v += 50)  s.push(v);
-  for (let v = 1000; v <= 5000; v += 250) s.push(v);
-  s.push(null);
-  return s;
-})();
-const LAST = STOPS.length - 1;
-
-function stopIndex(value) {
-  if (value == null) return LAST;
-  let best = 0;
-  for (let i = 0; i < LAST; i++) if (Math.abs(STOPS[i] - value) < Math.abs(STOPS[best] - value)) best = i;
-  return best;
-}
+/* paliers du curseur : definis une seule fois dans rank.js */
+const STOPS = RFPRank.STOPS, LAST = RFPRank.LAST, stopIndex = RFPRank.stopIndex;
 
 const money = v => v == null ? '—'
   : v === 0 ? 'Gratuit'
@@ -147,8 +131,10 @@ function row(it, best) {
 
   const m = el('div', 'm');
   const lab = RFPRank.ratingLabel(it);
-  m.appendChild(el('span', 'k-' + lab.kind, lab.text));
-  if (lab.sub) m.appendChild(el('span', null, lab.sub));
+  if (lab) {
+    m.appendChild(el('span', 'k-' + lab.kind, lab.text));
+    if (lab.sub) m.appendChild(el('span', null, lab.sub));
+  }
   if (it.note) m.appendChild(el('span', null, it.note));
   mid.appendChild(m);
 
@@ -182,7 +168,7 @@ chrome.storage.onChanged.addListener(ch => {
   if (ch.results) { cfg.results = ch.results.newValue || {}; render(); }
   if (ch.filters) {
     cfg.filters = ch.filters.newValue || cfg.filters;
-    document.getElementById('budget').value = stopIndex(cfg.filters.maxPrice);
+    RFPRank.setupSlider(document.getElementById('budget'), cfg.filters.maxPrice);
     render();
   }
 });
@@ -192,7 +178,7 @@ function load() {
     cfg = Object.assign({}, DEFAULTS, res);
     cfg.filters = Object.assign({}, DEFAULTS.filters, res.filters || {});
     cfg.results = res.results || {};
-    document.getElementById('budget').value = stopIndex(cfg.filters.maxPrice);
+    RFPRank.setupSlider(document.getElementById('budget'), cfg.filters.maxPrice);
     render();
   });
 }

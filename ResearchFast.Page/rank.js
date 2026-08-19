@@ -12,6 +12,43 @@ var RFPRank = (function () {
 
   const norm = s => (s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
 
+  /* ---------- paliers du curseur de budget ----------
+     Fins sur les petits prix, de plus en plus larges ensuite, jusqu'a
+     100 000 $ puis une position "sans limite". Definis ici une seule fois :
+     le popup, la page de comparaison et le panneau s'en servent tous. */
+  const STOPS = (function () {
+    const s = [];
+    for (let v = 5;     v < 50;      v += 5)     s.push(v);
+    for (let v = 50;    v < 200;     v += 10)    s.push(v);
+    for (let v = 200;   v < 500;     v += 25)    s.push(v);
+    for (let v = 500;   v < 1000;    v += 50)    s.push(v);
+    for (let v = 1000;  v < 5000;    v += 250)   s.push(v);
+    for (let v = 5000;  v < 10000;   v += 500)   s.push(v);
+    for (let v = 10000; v < 25000;   v += 1000)  s.push(v);
+    for (let v = 25000; v <= 100000; v += 5000)  s.push(v);
+    s.push(null);
+    return s;
+  })();
+  const LAST = STOPS.length - 1;
+
+  function stopIndex(value) {
+    if (value == null) return LAST;
+    let best = 0;
+    for (let i = 0; i < LAST; i++) {
+      if (Math.abs(STOPS[i] - value) < Math.abs(STOPS[best] - value)) best = i;
+    }
+    return best;
+  }
+
+  /* prepare un curseur : borne haute et position, sans dependre du HTML */
+  function setupSlider(slider, value) {
+    slider.min = 0;
+    slider.max = LAST;
+    slider.step = 1;
+    slider.value = stopIndex(value);
+    slider.style.setProperty('--fill', Math.round((slider.value / LAST) * 100) + '%');
+  }
+
   /* les sites connus, au meme endroit pour les trois interfaces */
   const SITES_META = {
     amazon:   { name: 'Amazon',      icon: '📦', rates: 'le produit' },
@@ -174,10 +211,17 @@ var RFPRank = (function () {
         sub: it.reviews ? it.reviews.toLocaleString('fr-CA') + ' avis' : ''
       };
     }
-    return { kind: 'none', text: 'vendeur non noté', sub: '' };
+    /* Le site ne publie aucune note sur ses pages de resultats (Marketplace) :
+       inutile de repeter "non noté" sur chaque ligne, l'en-tete le dit deja. */
+    const meta = SITES_META[it.siteId];
+    if (meta && meta.rates === 'rien') return null;
+
+    /* Ici une note etait attendue mais n'a pas ete lue : ca, il faut le dire. */
+    return { kind: 'none', text: 'note vendeur indisponible', sub: '' };
   }
 
-  return { rank, weights, qualityOf, ratingLabel, merge, norm, median, SITES_META };
+  return { rank, weights, qualityOf, ratingLabel, merge, norm, median,
+           SITES_META, STOPS, LAST, stopIndex, setupSlider };
 })();
 
 /* utilisable aussi bien dans le popup que dans la page */
