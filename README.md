@@ -4,9 +4,11 @@
 
 **GameOpen** · **PageCustomer** · **PetPage** · **ResearchFast.Page**
 
-Quatre extensions Chrome faites maison, gratuites, sans publicité et sans collecte de données.
+Quatre extensions faites maison, gratuites, sans publicité et sans collecte de données.
 
 ### 👉 [**Page de téléchargement**](https://scgaming887-svg.github.io/mes-extensions-chrome/) 👈
+
+*Les quatre y sont, avec un bouton par extension et un pack complet.*
 
 </div>
 
@@ -19,7 +21,9 @@ Quatre extensions Chrome faites maison, gratuites, sans publicité et sans colle
 <td width="80"><img src="GameOpen/icons/icon128.png" width="64"></td>
 <td>
 
-### GameOpen
+### GameOpen · v1.1.0
+[⬇️ Télécharger](https://scgaming887-svg.github.io/mes-extensions-chrome/downloads/GameOpen.zip)
+
 Lance tes applications de bureau depuis le navigateur, et joue en attendant.
 
 - 9 raccourcis prêts : Roblox, Discord, Steam, Spotify, Epic, Minecraft, Twitch, VS Code, YouTube
@@ -33,7 +37,9 @@ Lance tes applications de bureau depuis le navigateur, et joue en attendant.
 <td><img src="PageCustomer/icons/icon128.png" width="64"></td>
 <td>
 
-### PageCustomer
+### PageCustomer · v1.0.0
+[⬇️ Télécharger](https://scgaming887-svg.github.io/mes-extensions-chrome/downloads/PageCustomer.zip)
+
 Change l'apparence de n'importe quel site.
 
 - 6 thèmes en un clic : Nuit, Sépia, Néon, Lecture, Pastel
@@ -48,7 +54,9 @@ Change l'apparence de n'importe quel site.
 <td><img src="PetPage/icons/icon128.png" width="64"></td>
 <td>
 
-### PetPage
+### PetPage · v1.1.1
+[⬇️ Télécharger](https://scgaming887-svg.github.io/mes-extensions-chrome/downloads/PetPage.zip)
+
 Un compagnon animé qui vit en bas de tes pages.
 
 - 18 animaux au choix, taille, vitesse et nom réglables
@@ -67,21 +75,20 @@ Un compagnon animé qui vit en bas de tes pages.
 <td><img src="ResearchFast.Page/icons/icon128.png" width="64"></td>
 <td>
 
-### ResearchFast.Page
+### ResearchFast.Page · v1.2.1
+[⬇️ Télécharger](https://scgaming887-svg.github.io/mes-extensions-chrome/downloads/ResearchFast.Page.zip)
+
 Trouve la meilleure offre pour ce que tu cherches.
 
-- Tape ton article : l'extension ouvre la recherche sur Amazon, eBay et Marketplace d'un coup
-- Elle lit la page de résultats, en extrait titre, prix, note et nombre d'avis
-- Elle classe les annonces sur 100 en croisant **pertinence, prix, note et fiabilité**
-- **La pondération suit ton budget** : budget serré → le prix décide (47 %) ; budget dans la moyenne → prix et qualité à parts égales ; budget confortable → la qualité décide (52 %). Le mode actif est affiché en clair sous le curseur
-- Un article noté sous 3,5 ★ ne prend jamais la première place, même bradé
-- **Curseur de budget jusqu'à 100 000 $** : glisse pour fixer ton prix max, les résultats se refiltrent instantanément — sans rescanner. Il est présent dans le popup comme dans le panneau, et les deux restent synchronisés
-- Filtres : prix minimum, note minimale, mots à exclure, masquer les sponsorisés
+- Tape ton article : l'extension ouvre la recherche sur **Amazon, eBay et Marketplace** d'un coup
+- **Page de comparaison** : une colonne par site, remplie en direct pendant que les onglets se scannent en arrière-plan — plus besoin de les visiter un par un
+- Elle lit chaque page de résultats et en extrait titre, prix, note et fiabilité
+- **Curseur de budget jusqu'à 100 000 $**, avec refiltrage instantané sans rescanner
+- **Le classement s'adapte à ton budget** (voir plus bas)
+- **La note veut dire ce qu'elle dit** : Amazon note le produit, eBay note le **vendeur**, Marketplace ne publie rien
 - Écarte les accessoires : chercher « casque bluetooth » ne remonte pas les étuis pour casque
-- **Page de comparaison** : une colonne par site, remplie au fur et à mesure que les onglets se scannent — plus besoin de visiter chaque onglet un par un
-- **La note veut dire ce qu'elle dit** : Amazon note le produit, eBay note le **vendeur** (son % d'avis positifs et son nombre de ventes), Marketplace ne publie rien sur ses pages de résultats. Chaque note est étiquetée et colorée selon sa nature
-- Panneau classé directement sur la page, et résultats groupés par site dans le popup
-- Fonctionne aussi en mode générique sur les autres boutiques
+- Filtres : prix minimum, note minimale, mots à exclure, masquer les sponsorisés
+- Mode générique de secours sur les autres boutiques
 
 </td>
 </tr>
@@ -91,7 +98,7 @@ Trouve la meilleure offre pour ce que tu cherches.
 
 ## Installation
 
-Le plus simple : va sur la **[page de téléchargement](https://scgaming887-svg.github.io/mes-extensions-chrome/)**, prends le `.zip` qui t'intéresse, puis :
+Va sur la **[page de téléchargement](https://scgaming887-svg.github.io/mes-extensions-chrome/)**, prends le `.zip` qui t'intéresse, puis :
 
 1. **Décompresse-le** — clic droit → *Extraire tout*. Chrome ne lit pas les archives, il lui faut un dossier. Garde-le à un endroit fixe.
 2. Ouvre **`chrome://extensions`** *(ou `edge://extensions` sur Edge)*
@@ -106,9 +113,41 @@ Le plus simple : va sur la **[page de téléchargement](https://scgaming887-svg.
 git clone https://github.com/scgaming887-svg/mes-extensions-chrome.git
 ```
 
-Puis charge directement les dossiers `GameOpen/`, `PageCustomer/` ou `PetPage/`.
+Puis charge directement les dossiers `GameOpen/`, `PageCustomer/`, `PetPage/` ou `ResearchFast.Page/`.
 Après chaque modification : bouton ↻ sur `chrome://extensions`, et recharge l'onglet
-pour PageCustomer et PetPage (leurs scripts s'injectent dans la page).
+pour les trois extensions qui s'injectent dans les pages.
+
+---
+
+## Comment ResearchFast classe les offres
+
+Chaque annonce reçoit une note sur 100 qui croise **pertinence, prix, qualité et fiabilité**.
+La pondération change selon la place de ton budget dans le marché — comparée au **prix médian**
+des annonces trouvées :
+
+| Ton budget | Poids du prix | Poids de la qualité | Mode affiché |
+|---|---|---|---|
+| Moins de 0,8 × le médian | **47 %** | 25 % | *Budget serré : priorité au prix* |
+| Entre 0,8 × et 1,6 × | 33 % | 37 % | *Budget moyen : à parts égales* |
+| Plus de 1,6 ×, ou aucun budget | 18 % | **52 %** | *Budget confortable : priorité à la qualité* |
+
+Deux principes derrière ça :
+
+- **Dépenser son budget n'est pas une faute.** La pénalité de prix est plafonnée, sinon le
+  classement pousserait toujours vers le moins cher et le budget ne servirait à rien.
+- **Un article mal noté ne prend jamais la tête.** Sous 3,5 ★, il subit un malus même en
+  chasse au prix. Un rabais ne rachète pas trois étoiles.
+
+### Ce que « la note » signifie sur chaque site
+
+| Site | La note porte sur | Détail |
+|---|---|---|
+| Amazon | **le produit** | étoiles et nombre d'avis de la fiche |
+| eBay | **le vendeur** | son % d'avis positifs et son nombre de ventes — 90 % → 0 ★, 100 % → 5 ★ |
+| Marketplace | **rien** | Facebook ne publie aucune note sur ses pages de résultats |
+
+Chaque note est étiquetée et colorée selon sa nature, pour ne jamais mélanger « 4,7 ★ produit »
+et « 99 % vendeur ». Une note inconnue est traitée comme neutre : ni favorisée, ni pénalisée.
 
 ---
 
@@ -126,14 +165,14 @@ pour PageCustomer et PetPage (leurs scripts s'injectent dans la page).
 ## Structure du dépôt
 
 ```
-GameOpen/         extension 1 — manifest, popup, mini-jeux
-PageCustomer/     extension 2 — manifest, popup, content script
-PetPage/          extension 3 — manifest, popup, compagnon animé
-ResearchFast.Page/  extension 4 — manifest, popup, lecteur de pages de vente
-docs/             la page de téléchargement publiée par GitHub Pages
-publier.bat       met le site à jour en ligne
-PRIVACY.md        politique de confidentialité
-PUBLICATION-WEBSTORE.md   marche à suivre si un jour on publie sur le Web Store
+GameOpen/            extension 1 — manifest, popup, 6 mini-jeux
+PageCustomer/        extension 2 — manifest, popup, content script
+PetPage/             extension 3 — manifest, popup, compagnon animé
+ResearchFast.Page/   extension 4 — manifest, popup, lecteur de pages de vente,
+                                   page de comparaison, classement partagé
+docs/                la page de téléchargement publiée par GitHub Pages
+publier.bat          met le site à jour en ligne
+PRIVACY.md           politique de confidentialité
 ```
 
 Les quatre extensions sont en **Manifest V3**, sans aucune dépendance ni outil de build :
@@ -141,11 +180,28 @@ du HTML, du CSS et du JavaScript, lisibles tels quels.
 
 ---
 
+## Compatibilité connue
+
+| | Chrome | Edge |
+|---|---|---|
+| GameOpen | ✅ | à vérifier |
+| PageCustomer | ✅ | à vérifier |
+| PetPage | ✅ | ⚠️ **ne fonctionne pas** — signalé, cause non encore recherchée |
+| ResearchFast.Page | ✅ | à vérifier |
+
+Edge est basé sur Chromium, donc ces extensions devraient s'y charger, mais seul Chrome a
+été testé. Le problème PetPage sur Edge est noté et reste à traiter.
+
+---
+
 ## Vie privée
 
 Aucune donnée n'est collectée, aucune connexion réseau n'est faite. Tous les réglages
 restent dans le stockage local de ton navigateur (`chrome.storage.local`) et sont
-supprimés avec l'extension. Détails dans [PRIVACY.md](PRIVACY.md).
+supprimés avec l'extension.
+
+ResearchFast.Page lit le contenu des pages de résultats que tu lui demandes de scanner —
+c'est sa fonction même — mais rien n'en sort. Détails dans [PRIVACY.md](PRIVACY.md).
 
 ---
 
