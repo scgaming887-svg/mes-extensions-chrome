@@ -54,7 +54,7 @@ Change l'apparence de n'importe quel site.
 <td><img src="PetPage/icons/icon128.png" width="64"></td>
 <td>
 
-### PetPage · v1.2.0
+### PetPage · v1.2.1
 [⬇️ Télécharger](https://scgaming887-svg.github.io/mes-extensions-chrome/downloads/PetPage.zip)
 
 Un compagnon animé qui vit en bas de tes pages.
@@ -68,6 +68,7 @@ Un compagnon animé qui vit en bas de tes pages.
   - affamé → il **s'allonge** sur le flanc, les couleurs pâlissent
   - à bout → il **se fâche**, tremble, refuse les câlins tant qu'il n'a pas mangé
   - jauge d'humeur dans le popup, et vitesse de la faim réglable (8 h / 3 h / 25 min)
+  - **l'exercice creuse l'appétit** : chaque saut que *tu* déclenches avance la jauge d'environ 1 % — ses sauts spontanés, eux, ne comptent pas
 - **Il va se coucher** : un lit apparaît, il marche jusqu'à lui, s'y endort avec des 💤 — un clic le réveille
 - **Trois mini-jeux** lancés depuis le popup, joués directement sur la page :
   - 🍬 *Attrape les friandises* — bouge la souris, rattrape tout avant le sol (3 vies)
@@ -165,6 +166,9 @@ et « 99 % vendeur ». Une note inconnue est traitée comme neutre : ni favoris�
 | 2 clics | une gamelle tombe du ciel, il court la manger |
 | Cliquer-glisser | on l'attrape et on le lance, il retombe avec la gravité |
 | Boutons du popup | « Nourrir » et « Sauter » à distance |
+
+Les sauts que tu provoques — clic ou bouton — lui donnent faim plus vite : environ 38 sauts
+suffisent à le faire passer de repu à « petit creux ». Les sauts qu'il fait de lui-même sont gratuits.
 
 ---
 

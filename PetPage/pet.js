@@ -37,6 +37,13 @@ const DEFAULTS = {
    sur une page : elle survit donc a la fermeture du navigateur. */
 const HUNGER_MS = { lent: 8 * 3600e3, normal: 3 * 3600e3, rapide: 25 * 60e3 };
 
+/* Un saut que TU declenches creuse l'appetit : il avance la jauge de faim
+   de 1,2 %. La depense est proportionnelle a la vitesse choisie, donc un
+   saut "coute" pareil en mode lent et en mode rapide.
+   Les sauts qu'il fait tout seul ne comptent pas : sinon la faim
+   avancerait sans que tu y sois pour rien. */
+const JUMP_HUNGER = 0.012;
+
 /* Les paliers d'humeur, du plus calme au plus fache */
 const MOODS = [
   { key: 'ok',     max: 0.45, label: 'repu' },
@@ -67,6 +74,8 @@ const LINES = {
   affame: ['J\'ai vraiment faim...', 'Plus la force...', 'Nourris-moi 🥺', 'Je me couche, tiens'],
   fache:  ['Tu m\'oublies ! 💢', 'NOURRIS-MOI !', 'Grrr 😠', 'Je boude.'],
   refus:  ['Pas de câlin sans repas ! 💢', 'Grrr, j\'ai faim !', 'Nourris-moi d\'abord.'],
+
+  effort: ['Ça creuse ! 😮‍💨', 'Ouf... j’ai faim maintenant', 'Encore un et je réclame à manger'],
 
   /* --- le coucher --- */
   dodo:   ['Je vais me coucher...', 'Bonne nuit 🌙', 'Petit somme'],
@@ -212,6 +221,7 @@ class Pet {
         this.tapTimer = setTimeout(() => { this.taps = 0; this.caress(); }, 260);
       } else {
         clearTimeout(this.tapTimer);
+    clearTimeout(this.saveTimer);
         this.taps = 0;
         this.feed();
       }
@@ -251,11 +261,35 @@ class Pet {
     }
     this.say(pick(LINES.pet), 1800);
     this.particles('💛', 3, -0.25);
-    this.jump(0.75);
+    this.jump(0.75, true);          /* c'est toi qui le fais sauter */
   }
 
-  jump(power) {
+  /* Depense de l'energie : on recule l'heure du dernier repas, ce qui
+     revient a avancer la faim. Un seul compteur, donc rien a resynchroniser. */
+  burn(part) {
+    const span = HUNGER_MS[this.cfg.hungerSpeed] || HUNGER_MS.normal;
+    const now = Date.now();
+    /* jamais nourri : on part du niveau de faim affiche par defaut (30 %) */
+    const base = this.cfg.lastFed || (now - 0.3 * span);
+
+    this.cfg.lastFed = Math.max(now - span * 1.2,
+                                Math.min(now, base - part * span));
+    this.moodTimer = 0;                 /* qu'il reagisse tout de suite */
+
+    /* on n'ecrit pas dans le stockage a chaque saut */
+    clearTimeout(this.saveTimer);
+    this.saveTimer = setTimeout(() => {
+      chrome.storage.local.set({ lastFed: this.cfg.lastFed });
+    }, 1200);
+
+    if (this.cfg.chatty && hungerOf(this.cfg) > 0.35 && Math.random() < 0.3) {
+      this.say(pick(LINES.effort), 2000);
+    }
+  }
+
+  jump(power, parToi) {
     if (this.state === 'dragged' || this.state === 'eating' || this.inAir()) return;
+    if (parToi) this.burn(JUMP_HUNGER);
     const p = power || 1;
     this.vy = -0.55 * p;
     this.vx = this.dir * 0.06 * p;
@@ -452,7 +486,7 @@ class Pet {
     this.idleFor = 0;
     this.timer = 900;
     this.say(parToi ? 'Hein ? Je dormais pas !' : pick(LINES.reveil), 2000);
-    if (parToi) this.jump(0.7);
+    if (parToi) this.jump(0.7, false);
   }
 
   think(dt) {
@@ -1136,7 +1170,7 @@ function handle(msg, respond) {
     return;
   }
   if (msg.action === 'feed') pet.feed();
-  else if (msg.action === 'jump') pet.jump(1.3);
+  else if (msg.action === 'jump') pet.jump(1.3, true);   /* saut demande : ca creuse */
   else if (msg.action === 'minigame') {
     if (!GAME_META[msg.game]) { respond({ ok: false, reason: 'unknown' }); return; }
     if (pet.game) pet.game.destroy();

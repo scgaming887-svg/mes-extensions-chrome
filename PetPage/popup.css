@@ -145,3 +145,5 @@ select {
   color: var(--text); font: inherit; font-size: 12px; cursor: pointer;
 }
 select:focus { outline: none; border-color: var(--accent); }
+
+.hint-small { margin-top: 9px; font-size: 10.5px; line-height: 1.4; color: var(--muted); }
