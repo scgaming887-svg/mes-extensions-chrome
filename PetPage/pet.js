@@ -13,7 +13,8 @@
    recharger l'onglet) : on nettoie ses elements avant de repartir a neuf. */
 document.querySelectorAll(
   '.petpage-pet, .petpage-bubble, .petpage-food, .petpage-particle, ' +
-  '.petpage-shield, .petpage-hud, .petpage-card, .petpage-item, .petpage-rival, .petpage-finish'
+  '.petpage-shield, .petpage-hud, .petpage-card, .petpage-item, .petpage-rival, ' +
+  '.petpage-finish, .petpage-bed'
 ).forEach(el => el.remove());
 
 const DEFAULTS = {
@@ -26,8 +27,23 @@ const DEFAULTS = {
   chatty: true,
   disabledSites: [],
   meals: 0,
-  petScores: { treats: 0, runner: 0, race: 0 }
+  petScores: { treats: 0, runner: 0, race: 0 },
+  lastFed: 0,            /* quand a-t-il mange pour la derniere fois */
+  hungerSpeed: 'normal'  /* lent | normal | rapide */
 };
+
+/* Combien de temps pour passer de rassasie a affame.
+   La faim est calculee sur l'heure reelle, pas sur le temps passe
+   sur une page : elle survit donc a la fermeture du navigateur. */
+const HUNGER_MS = { lent: 8 * 3600e3, normal: 3 * 3600e3, rapide: 25 * 60e3 };
+
+/* Les paliers d'humeur, du plus calme au plus fache */
+const MOODS = [
+  { key: 'ok',     max: 0.45, label: 'repu' },
+  { key: 'hungry', max: 0.70, label: 'un petit creux' },
+  { key: 'lying',  max: 0.90, label: 'affamé, il s\'est allongé' },
+  { key: 'angry',  max: 1.01, label: 'fâché de ne pas être nourri' }
+];
 
 /* de quoi mange chaque animal */
 const FOOD = {
@@ -44,12 +60,31 @@ const LINES = {
   follow: ['Attends-moi !', 'Je te suis !', 'Par ici !'],
   hungry: ['Oh, à manger ! 🤤', 'Pour moi ?!', 'Miam miam miam'],
   full:   ['Merci ! 💛', 'C\'était délicieux', 'Encore un ? 🤤', 'Miam !'],
-  jump:   ['Hop !', 'Youpi !', 'Wiii !']
+  jump:   ['Hop !', 'Youpi !', 'Wiii !'],
+
+  /* --- la faim, du petit creux a la colere --- */
+  creux:  ['J\'ai un petit creux...', 'C\'est bientôt l\'heure ?', 'Mmh, je mangerais bien'],
+  affame: ['J\'ai vraiment faim...', 'Plus la force...', 'Nourris-moi 🥺', 'Je me couche, tiens'],
+  fache:  ['Tu m\'oublies ! 💢', 'NOURRIS-MOI !', 'Grrr 😠', 'Je boude.'],
+  refus:  ['Pas de câlin sans repas ! 💢', 'Grrr, j\'ai faim !', 'Nourris-moi d\'abord.'],
+
+  /* --- le coucher --- */
+  dodo:   ['Je vais me coucher...', 'Bonne nuit 🌙', 'Petit somme'],
+  reveil: ['Hein ? Déjà ?', 'Bien dormi ! 🥱', 'Je rêvais de croquettes...']
 };
 
 const GRAVITY = 0.0022;   /* px / ms^2 */
 
 const pick = arr => arr[(Math.random() * arr.length) | 0];
+
+/* 0 = repu, 1 = affame. Base sur l'heure reelle du dernier repas. */
+function hungerOf(config) {
+  const span = HUNGER_MS[config.hungerSpeed] || HUNGER_MS.normal;
+  if (!config.lastFed) return 0.3;          /* jamais nourri : un peu creux */
+  return Math.max(0, Math.min(1, (Date.now() - config.lastFed) / span));
+}
+
+const moodOf = h => (MOODS.find(m => h < m.max) || MOODS[MOODS.length - 1]).key;
 
 let cfg = Object.assign({}, DEFAULTS);
 let pet = null;
@@ -95,6 +130,11 @@ class Pet {
     this.mouse = { x: 0, y: 0, seen: false };
     this.bubbleTimer = null;
     this.game = null;
+
+    this.mood = moodOf(hungerOf(config));   /* repu / creux / allongé / fâché */
+    this.moodTimer = 0;
+    this.bed = null;
+    this.zzzTimer = 0;
 
     this.applySize();
     this.bindEvents();
@@ -192,10 +232,21 @@ class Pet {
      Actions
      ========================================================== */
   caress() {
-    if (this.state === 'sleeping') {
-      this.setState('idle');
-      this.timer = 800;
-      this.say('Hein ? Je dormais pas !', 2000);
+    /* un clic le sort du lit */
+    if (this.state === 'sleeping' || this.state === 'toBed') {
+      this.wake(true);
+      return;
+    }
+    /* fache : pas de calin tant qu'il n'a pas mange */
+    if (this.mood === 'angry') {
+      this.say(pick(LINES.refus), 2000);
+      this.particles('💢', 3, -0.25);
+      return;
+    }
+    /* affame : il accepte la caresse mais n'a pas la force de sauter */
+    if (this.mood === 'lying') {
+      this.say('Nourris-moi... 🥺', 2000);
+      this.particles('💧', 2, -0.2);
       return;
     }
     this.say(pick(LINES.pet), 1800);
@@ -221,7 +272,7 @@ class Pet {
     if (this.state === 'eating') { this.say('Attends, je mange ! 😅', 1600); return; }
     if (this.food) { this.say('Y en a deja une !', 1600); return; }
 
-    if (this.state === 'sleeping') this.setState('idle');
+    if (this.state === 'sleeping' || this.state === 'toBed') this.wake(false);
 
     const emoji = FOOD[this.cfg.animal] || '🍎';
     const el = document.createElement('div');
@@ -275,8 +326,15 @@ class Pet {
       this.say(pick(LINES.full), 2200);
     }, 700);
 
+    /* le repas remet le compteur de faim a zero, tout de suite en memoire
+       et durablement dans le stockage */
+    const maintenant = Date.now();
+    this.cfg.lastFed = maintenant;
+    this.mood = 'ok';
+    this.moodTimer = 8000;
+
     chrome.storage.local.get({ meals: 0 }, r => {
-      chrome.storage.local.set({ meals: (r.meals || 0) + 1 });
+      chrome.storage.local.set({ meals: (r.meals || 0) + 1, lastFed: maintenant });
     });
   }
 
@@ -330,31 +388,118 @@ class Pet {
   setState(s) {
     if (this.state === s) return;
     this.state = s;
-    this.el.classList.remove('is-idle', 'is-walking', 'is-sleeping', 'is-eating', 'is-air');
+    this.el.classList.remove('is-idle', 'is-walking', 'is-sleeping', 'is-eating',
+                             'is-air', 'is-lying', 'is-angry');
     if (s === 'idle') this.el.classList.add('is-idle');
-    if (s === 'walking' || s === 'following' || s === 'seeking') this.el.classList.add('is-walking');
+    if (s === 'walking' || s === 'following' || s === 'seeking' || s === 'toBed') {
+      this.el.classList.add('is-walking');
+    }
     if (s === 'sleeping') this.el.classList.add('is-sleeping');
     if (s === 'eating') this.el.classList.add('is-eating');
+    if (s === 'lying') this.el.classList.add('is-lying');
+    if (s === 'angry') this.el.classList.add('is-angry');
     if (this.inAir()) this.el.classList.add('is-air');
+  }
+
+  /* ==========================================================
+     Le coucher : il va jusqu'au lit, dort dedans, se reveille
+     ========================================================== */
+  goToBed() {
+    if (this.bed) return;
+
+    const w = Math.round(this.size * 1.8);
+    const el = document.createElement('div');
+    el.className = 'petpage-bed';
+    el.textContent = '🛏️';
+    el.style.fontSize = w + 'px';
+
+    /* le lit apparait un peu plus loin, pour qu'il ait a marcher */
+    const ecart = 130 + Math.random() * 180;
+    const x = Math.max(8, Math.min(window.innerWidth - w - 8,
+                                   this.x + (Math.random() < 0.5 ? -ecart : ecart)));
+    el.style.left = x + 'px';
+    el.style.top = (window.innerHeight - w - 2) + 'px';
+    document.body.appendChild(el);
+    el.animate([{ opacity: 0, transform: 'translateY(18px) scale(.85)' },
+                { opacity: 1, transform: 'none' }],
+               { duration: 320, easing: 'ease-out' });
+
+    this.bed = { el, x, w };
+    this.setState('toBed');
+    this.say(pick(LINES.dodo), 2200);
+    this.timer = 9000;          /* garde-fou si le lit reste inatteignable */
+  }
+
+  sleepInBed() {
+    this.x = this.bed.x + (this.bed.w - this.size) / 2;
+    this.y = this.ground() - this.size * 0.22;
+    this.setState('sleeping');
+    this.zzzTimer = 900;
+    this.timer = 15000 + Math.random() * 25000;
+    this.render();
+  }
+
+  wake(parToi) {
+    if (this.bed) {
+      const b = this.bed;
+      this.bed = null;
+      b.el.animate([{ opacity: 1 }, { opacity: 0, transform: 'translateY(14px) scale(.85)' }],
+                   { duration: 300, easing: 'ease-in' });
+      setTimeout(() => b.el.remove(), 290);
+    }
+    this.y = this.ground();
+    this.setState('idle');
+    this.idleFor = 0;
+    this.timer = 900;
+    this.say(parToi ? 'Hein ? Je dormais pas !' : pick(LINES.reveil), 2000);
+    if (parToi) this.jump(0.7);
   }
 
   think(dt) {
     this.timer -= dt;
     if (this.timer > 0) return;
 
+    /* --- la faim passe avant la routine --- */
+    if (this.mood === 'angry') {
+      this.setState('angry');
+      this.say(pick(LINES.fache), 2200);
+      this.particles('💢', 2, -0.22);
+      this.timer = 3000 + Math.random() * 3000;
+      return;
+    }
+    if (this.mood === 'lying') {
+      this.setState('lying');
+      if (this.cfg.chatty && Math.random() < 0.5) this.say(pick(LINES.affame), 2600);
+      this.timer = 4000 + Math.random() * 4000;
+      return;
+    }
+    /* il vient d'etre nourri : il se releve */
+    if (this.state === 'lying' || this.state === 'angry') {
+      this.setState('idle');
+      this.idleFor = 0;
+      this.timer = 700;
+      return;
+    }
+
     if (this.state === 'idle') {
       this.idleFor += 1;
 
+      if (this.mood === 'hungry' && Math.random() < 0.45) {
+        this.say(pick(LINES.creux), 2400);
+        this.timer = 2500 + Math.random() * 2500;
+        return;
+      }
       if (Math.random() < 0.15) {           /* saut spontane */
         this.jump(0.9);
         if (this.cfg.chatty && Math.random() < 0.4) this.say(pick(LINES.jump), 1400);
         this.timer = 900;
         return;
       }
-      if (this.idleFor > 3 && Math.random() < 0.4) {
-        this.setState('sleeping');
-        this.say(pick(LINES.sleep), 2500);
-        this.timer = 6000 + Math.random() * 6000;
+      /* il ne va se coucher que le ventre plein, et pas trop souvent :
+         environ une sieste par minute d'inactivite */
+      if (this.idleFor > 6 && this.mood === 'ok' && Math.random() < 0.3) {
+        this.idleFor = 0;
+        this.goToBed();
         return;
       }
       if (this.cfg.chatty && Math.random() < 0.3) this.say(pick(LINES.bored), 2400);
@@ -365,13 +510,17 @@ class Pet {
 
     } else if (this.state === 'walking') {
       this.setState('idle');
-      this.idleFor = 0;
+      /* idleFor compte les cycles depuis la derniere sieste, PAS depuis la
+         derniere marche : le remettre a zero ici rendait le coucher presque
+         impossible (il fallait 4 sauts d'affilee). */
       this.timer = 1000 + Math.random() * 2500;
 
+    } else if (this.state === 'toBed') {
+      /* il n'a pas reussi a rejoindre le lit : on annule proprement */
+      this.wake(false);
+
     } else if (this.state === 'sleeping') {
-      this.setState('idle');
-      this.idleFor = 0;
-      this.timer = 800;
+      this.wake(false);
     }
   }
 
@@ -380,8 +529,35 @@ class Pet {
      ========================================================== */
   update(dt) {
     this.updateFood(dt);
+    this.updateMood(dt);
 
     if (this.state === 'dragged') { this.render(); return; }
+
+    /* --- il dort dans son lit --- */
+    if (this.state === 'sleeping') {
+      this.zzzTimer -= dt;
+      if (this.zzzTimer <= 0) {
+        this.zzzTimer = 2200 + Math.random() * 1200;
+        this.particles('💤', 1, -0.3);
+      }
+      this.think(dt);
+      this.render();
+      return;
+    }
+
+    /* --- il marche jusqu'a son lit --- */
+    if (this.state === 'toBed' && this.bed) {
+      const cible = this.bed.x + (this.bed.w - this.size) / 2;
+      const dx = cible - this.x;
+
+      if (Math.abs(dx) < 6) { this.sleepInBed(); return; }
+      this.dir = dx > 0 ? 1 : -1;
+      this.x += this.dir * 0.19 * this.cfg.speed * dt;
+      this.think(dt);
+      this.clamp();
+      this.render();
+      return;
+    }
 
     if (this.inAir()) {
       this.vy += GRAVITY * dt;
@@ -426,7 +602,8 @@ class Pet {
       return;
     }
 
-    if (this.cfg.follow && this.mouse.seen) {
+    /* affame ou fache, il n'a pas le coeur a te suivre */
+    if (this.cfg.follow && this.mouse.seen && this.mood !== 'lying' && this.mood !== 'angry') {
       const dx = this.mouse.x - (this.x + this.size / 2);
       if (Math.abs(dx) > this.size * 1.5) {
         if (this.state !== 'following') {
@@ -456,6 +633,21 @@ class Pet {
 
     this.clamp();
     this.render();
+  }
+
+  /* La faim se recalcule sur l'horloge, pas sur le temps de la page :
+     on la relit regulierement plutot que de la compter image par image. */
+  updateMood(dt) {
+    this.moodTimer -= dt;
+    if (this.moodTimer > 0) return;
+    this.moodTimer = 8000;
+
+    const m = moodOf(hungerOf(this.cfg));
+    if (m === this.mood) return;
+
+    this.mood = m;
+    this.timer = 0;                       /* qu'il reagisse tout de suite */
+    if ((m === 'lying' || m === 'angry') && this.bed) this.wake(false);
   }
 
   updateFood(dt) {
@@ -498,7 +690,12 @@ class Pet {
   render() {
     this.el.style.left = this.x + 'px';
     this.el.style.top = this.y + 'px';
-    this.sprite.style.transform = this.dir < 0 ? 'scaleX(-1)' : 'scaleX(1)';
+
+    let t = this.dir < 0 ? 'scaleX(-1)' : 'scaleX(1)';
+    if (this.state === 'lying') t += ' rotate(78deg)';        /* affame : couche sur le flanc */
+    else if (this.state === 'sleeping' && this.bed) t += ' rotate(-10deg)';
+    this.sprite.style.transform = t;
+
     this.positionBubble();
   }
 
@@ -530,6 +727,7 @@ class Pet {
     clearTimeout(this.bubbleTimer);
     clearTimeout(this.tapTimer);
     if (this.food) this.food.el.remove();
+    if (this.bed) this.bed.el.remove();
     this.el.remove();
     this.bubble.remove();
   }

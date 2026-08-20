@@ -117,3 +117,31 @@ input[type=range] { width: 100%; margin-top: 6px; accent-color: var(--accent); }
 .game-btn .gb { font-size: 11px; color: var(--muted); }
 .game-btn .gb b { color: var(--accent); }
 .games-hint { margin-top: 8px; font-size: 10.5px; color: var(--muted); text-align: center; }
+
+/* ---- etat : faim et humeur ---- */
+.mood { display: flex; align-items: center; gap: 11px; margin-bottom: 11px; }
+.mood-icon { font-size: 27px; line-height: 1; }
+.mood-mid { flex: 1; min-width: 0; }
+.mood-label { font-size: 12.5px; font-weight: 600; margin-bottom: 5px; }
+.mood-sub { margin-top: 5px; font-size: 10.5px; color: var(--muted); }
+
+.gauge {
+  height: 7px; background: var(--bg); border: 1px solid var(--line);
+  border-radius: 7px; overflow: hidden;
+}
+.gauge span {
+  display: block; height: 100%; width: 0;
+  border-radius: 7px; transition: width .3s, background .3s;
+}
+.gauge span.is-ok     { background: linear-gradient(90deg, #7ee0a0, #4dd6a0); }
+.gauge span.is-hungry { background: linear-gradient(90deg, #ffd166, #ffb45c); }
+.gauge span.is-lying  { background: linear-gradient(90deg, #ffb45c, #ff8a5c); }
+.gauge span.is-angry  { background: linear-gradient(90deg, #ff7676, #ff4d4d); }
+
+.lbl-inline { display: block; margin-bottom: 5px; font-size: 11px; color: var(--muted); }
+select {
+  width: 100%; padding: 7px 9px; background: var(--bg);
+  border: 1px solid var(--line); border-radius: 8px;
+  color: var(--text); font: inherit; font-size: 12px; cursor: pointer;
+}
+select:focus { outline: none; border-color: var(--accent); }

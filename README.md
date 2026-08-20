@@ -54,7 +54,7 @@ Change l'apparence de n'importe quel site.
 <td><img src="PetPage/icons/icon128.png" width="64"></td>
 <td>
 
-### PetPage · v1.1.1
+### PetPage · v1.2.0
 [⬇️ Télécharger](https://scgaming887-svg.github.io/mes-extensions-chrome/downloads/PetPage.zip)
 
 Un compagnon animé qui vit en bas de tes pages.
@@ -63,6 +63,12 @@ Un compagnon animé qui vit en bas de tes pages.
 - Il marche, s'ennuie, s'endort, saute tout seul et te suit à la souris
 - Nourriture adaptée à l'espèce : poisson pour le chat, os pour le chien, carotte pour le lapin…
 - Physique réelle : attrape-le, lance-le, il retombe et s'écrase au sol
+- **Il a faim, et ça se voit** : la faim court sur l'horloge réelle et survit à la fermeture du navigateur
+  - petit creux → il te le dit
+  - affamé → il **s'allonge** sur le flanc, les couleurs pâlissent
+  - à bout → il **se fâche**, tremble, refuse les câlins tant qu'il n'a pas mangé
+  - jauge d'humeur dans le popup, et vitesse de la faim réglable (8 h / 3 h / 25 min)
+- **Il va se coucher** : un lit apparaît, il marche jusqu'à lui, s'y endort avec des 💤 — un clic le réveille
 - **Trois mini-jeux** lancés depuis le popup, joués directement sur la page :
   - 🍬 *Attrape les friandises* — bouge la souris, rattrape tout avant le sol (3 vies)
   - 🌵 *Saute les obstacles* — course sans fin, Espace ou clic pour sauter
@@ -186,11 +192,11 @@ du HTML, du CSS et du JavaScript, lisibles tels quels.
 |---|---|---|
 | GameOpen | ✅ | à vérifier |
 | PageCustomer | ✅ | à vérifier |
-| PetPage | ✅ | ⚠️ **ne fonctionne pas** — signalé, cause non encore recherchée |
+| PetPage | ✅ | ✅ |
 | ResearchFast.Page | ✅ | à vérifier |
 
-Edge est basé sur Chromium, donc ces extensions devraient s'y charger, mais seul Chrome a
-été testé. Le problème PetPage sur Edge est noté et reste à traiter.
+Edge est basé sur Chromium : ces extensions s'y chargent de la même façon.
+PetPage y a été confirmée, les autres devraient suivre sans surprise.
 
 ---
 

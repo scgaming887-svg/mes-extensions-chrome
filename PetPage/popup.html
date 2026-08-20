@@ -26,6 +26,26 @@
     <p class="msg" id="msg"></p>
 
     <section class="card">
+      <h2>Son état</h2>
+      <div class="mood">
+        <span class="mood-icon" id="mood-icon">😊</span>
+        <div class="mood-mid">
+          <div class="mood-label" id="mood-label">Repu et content</div>
+          <div class="gauge"><span id="gauge-fill"></span></div>
+          <div class="mood-sub" id="mood-sub"></div>
+        </div>
+      </div>
+      <label class="field">
+        <span class="lbl-inline">Vitesse de la faim</span>
+        <select id="hungerSpeed">
+          <option value="lent">Lente — affamé en 8 h</option>
+          <option value="normal">Normale — affamé en 3 h</option>
+          <option value="rapide">Rapide — affamé en 25 min</option>
+        </select>
+      </label>
+    </section>
+
+    <section class="card">
       <h2>Mini-jeux</h2>
       <div class="games" id="games"></div>
       <p class="games-hint">Le jeu se lance sur la page ouverte. Échap pour quitter.</p>

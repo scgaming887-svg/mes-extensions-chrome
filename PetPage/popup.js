@@ -12,7 +12,9 @@ const DEFAULTS = {
   chatty: true,
   disabledSites: [],
   meals: 0,
-  petScores: { treats: 0, runner: 0, race: 0 }
+  petScores: { treats: 0, runner: 0, race: 0 },
+  lastFed: 0,
+  hungerSpeed: 'normal'
 };
 
 const GAMES = [
@@ -23,6 +25,51 @@ const GAMES = [
 
 const ANIMALS = ['🐱', '🐶', '🦊', '🐧', '🐹', '🐰', '🐼', '🐸', '🐢', '🦄', '🐉', '🐥',
                  '🐨', '🦖', '🐙', '🦉', '🐝', '🦋'];
+
+
+/* Memes seuils que dans pet.js : si tu changes l un, change l autre. */
+const HUNGER_MS = { lent: 8 * 3600e3, normal: 3 * 3600e3, rapide: 25 * 60e3 };
+const MOOD_TEXT = {
+  ok:     { icon: '😊', text: 'Repu et content' },
+  hungry: { icon: '🍽️', text: 'Un petit creux' },
+  lying:  { icon: '😪', text: 'Affamé — il s’est allongé' },
+  angry:  { icon: '😠', text: 'Fâché ! Nourris-le' }
+};
+
+function hungerNow() {
+  const span = HUNGER_MS[cfg.hungerSpeed] || HUNGER_MS.normal;
+  if (!cfg.lastFed) return 0.3;
+  return Math.max(0, Math.min(1, (Date.now() - cfg.lastFed) / span));
+}
+
+const moodKey = h => h < 0.45 ? 'ok' : h < 0.7 ? 'hungry' : h < 0.9 ? 'lying' : 'angry';
+
+function duree(ms) {
+  const min = Math.round(ms / 60000);
+  if (min < 1) return 'moins d’une minute';
+  if (min < 60) return min + ' min';
+  const h = Math.floor(min / 60), r = min % 60;
+  return r ? h + ' h ' + r + ' min' : h + ' h';
+}
+
+function renderMood() {
+  const h = hungerNow();
+  const key = moodKey(h);
+  const m = MOOD_TEXT[key];
+
+  document.getElementById('mood-icon').textContent = m.icon;
+  document.getElementById('mood-label').textContent = m.text;
+
+  const fill = document.getElementById('gauge-fill');
+  fill.style.width = Math.round(h * 100) + '%';
+  fill.className = 'is-' + key;
+
+  const span = HUNGER_MS[cfg.hungerSpeed] || HUNGER_MS.normal;
+  const sub = document.getElementById('mood-sub');
+  if (key === 'angry') sub.textContent = 'Il refuse les câlins tant qu’il n’a pas mangé.';
+  else if (key === 'lying') sub.textContent = 'Il se fâchera dans ' + duree((0.9 - h) * span) + '.';
+  else sub.textContent = 'Il s’allongera de faim dans ' + duree((0.7 - h) * span) + '.';
+}
 
 let cfg = Object.assign({}, DEFAULTS);
 let host = '';
@@ -82,9 +129,11 @@ function fillForm() {
   document.getElementById('speed').value = cfg.speed;
   document.getElementById('follow').checked = cfg.follow;
   document.getElementById('chatty').checked = cfg.chatty;
+  document.getElementById('hungerSpeed').value = cfg.hungerSpeed || 'normal';
   renderAnimals();
   refreshOutputs();
   renderMeals();
+  renderMood();
   renderSiteButton();
 }
 
@@ -114,10 +163,12 @@ function save() {
     size:    Number(document.getElementById('size').value),
     speed:   Number(document.getElementById('speed').value),
     follow:  document.getElementById('follow').checked,
-    chatty:  document.getElementById('chatty').checked
+    chatty:  document.getElementById('chatty').checked,
+    hungerSpeed: document.getElementById('hungerSpeed').value
   };
   Object.assign(cfg, patch);
   chrome.storage.local.set(patch);
+  renderMood();
 }
 
 document.addEventListener('input', save);
@@ -188,11 +239,18 @@ chrome.storage.onChanged.addListener(changes => {
     cfg.meals = changes.meals.newValue;
     renderMeals();
   }
+  if (changes.lastFed) {
+    cfg.lastFed = changes.lastFed.newValue;
+    renderMood();
+  }
   if (changes.petScores) {
     cfg.petScores = changes.petScores.newValue;
     renderGames();
   }
 });
+
+/* la faim court avec l'horloge : on rafraichit tant que le popup est ouvert */
+setInterval(renderMood, 5000);
 
 /* ---------- demarrage ---------- */
 chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
