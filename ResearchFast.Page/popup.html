@@ -18,6 +18,12 @@
 
     <div class="budget">
       <div class="budget-top">
+        <span class="lbl">Prix minimum</span>
+        <span class="budget-val no-limit" id="min-val">aucun</span>
+      </div>
+      <input type="range" id="minPrice" min="0" max="103" step="1" value="0">
+
+      <div class="budget-top budget-second">
         <span class="lbl">Budget maximum</span>
         <span class="budget-val" id="budget-val">sans limite</span>
       </div>
@@ -36,10 +42,6 @@
   <details class="filters">
     <summary>Filtres</summary>
     <div class="row">
-      <label class="field small">
-        <span class="lbl">Prix min</span>
-        <input type="number" id="minPrice" placeholder="0" min="0">
-      </label>
       <label class="field small">
         <span class="lbl">Note mini</span>
         <select id="minRating">

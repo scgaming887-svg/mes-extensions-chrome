@@ -29,6 +29,7 @@ const SEARCH = {
 
 /* paliers du curseur : definis une seule fois dans rank.js */
 const STOPS = RFPRank.STOPS, LAST = RFPRank.LAST, stopIndex = RFPRank.stopIndex;
+const MIN_STOPS = RFPRank.MIN_STOPS;
 
 const euros = v => v.toLocaleString('fr-CA') + ' $';
 
@@ -84,6 +85,12 @@ function renderBudget(r) {
 
   val.textContent = max == null ? 'sans limite' : euros(max);
   val.className = 'budget-val' + (max == null ? ' no-limit' : '');
+
+  const min = cfg.filters.minPrice;
+  const minVal = document.getElementById('min-val');
+  minVal.textContent = min == null ? 'aucun' : euros(min);
+  minVal.className = 'budget-val' + (min == null ? ' no-limit' : '');
+  RFPRank.paintRange(document.getElementById('minPrice'), MIN_STOPS);
   slider.style.setProperty('--fill', Math.round((slider.value / LAST) * 100) + '%');
 
   const all = r.items;
@@ -108,13 +115,16 @@ function renderBudget(r) {
 
   const b = document.createElement('b');
   b.textContent = inBudget.length + (inBudget.length > 1 ? ' offres' : ' offre');
-  hint.append(b, max == null ? ' au total.' : ' dans ton budget.');
+  if (min != null && max != null)      hint.append(b, ' entre ' + euros(min) + ' et ' + euros(max) + '.');
+  else if (min != null)                hint.append(b, ' au-dessus de ' + euros(min) + '.');
+  else if (max != null)                hint.append(b, ' dans ton budget.');
+  else                                 hint.append(b, ' au total.');
 }
 
 function fillForm() {
   document.getElementById('query').value = cfg.query;
+  RFPRank.setupRange(document.getElementById('minPrice'), MIN_STOPS, cfg.filters.minPrice);
   RFPRank.setupSlider(document.getElementById('budget'), cfg.filters.maxPrice);
-  document.getElementById('minPrice').value = cfg.filters.minPrice != null ? cfg.filters.minPrice : '';
   document.getElementById('minRating').value = cfg.filters.minRating || 0;
   document.getElementById('exclude').value = cfg.filters.exclude || '';
   document.getElementById('noSponsored').checked = !!cfg.filters.noSponsored;
@@ -124,14 +134,10 @@ function fillForm() {
 }
 
 function readForm() {
-  const num = id => {
-    const v = document.getElementById(id).value.trim();
-    return v === '' ? null : Number(v);
-  };
   cfg.query = document.getElementById('query').value.trim();
   cfg.region = document.getElementById('region').value;
   cfg.filters = {
-    minPrice: num('minPrice'),
+    minPrice: MIN_STOPS[Number(document.getElementById('minPrice').value)],
     maxPrice: STOPS[Number(document.getElementById('budget').value)],
     minRating: Number(document.getElementById('minRating').value),
     exclude: document.getElementById('exclude').value.trim(),
@@ -139,8 +145,18 @@ function readForm() {
   };
 }
 
-function save() {
+function save(bouge) {
   readForm();
+
+  /* le minimum ne peut pas passer au-dessus du budget : on rabat l'autre
+     curseur et on le remet a sa place a l'ecran */
+  const avant = cfg.filters.minPrice + '/' + cfg.filters.maxPrice;
+  RFPRank.clampBounds(cfg.filters, bouge);
+  if (avant !== cfg.filters.minPrice + '/' + cfg.filters.maxPrice) {
+    RFPRank.setupRange(document.getElementById('minPrice'), MIN_STOPS, cfg.filters.minPrice);
+    RFPRank.setupSlider(document.getElementById('budget'), cfg.filters.maxPrice);
+  }
+
   chrome.storage.local.set({
     query: cfg.query, sites: cfg.sites, filters: cfg.filters, region: cfg.region
   });
@@ -338,7 +354,11 @@ document.getElementById('clear').addEventListener('click', () => {
   refresh();
 });
 
-document.addEventListener('input', () => { save(); refresh(); });
+document.addEventListener('input', e => {
+  const id = e.target && e.target.id;
+  save(id === 'minPrice' ? 'min' : id === 'budget' ? 'max' : null);
+  refresh();
+});
 
 document.getElementById('query').addEventListener('keydown', e => {
   if (e.key === 'Enter') document.getElementById('go').click();

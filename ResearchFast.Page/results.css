@@ -156,3 +156,5 @@ footer {
   color: var(--muted); font-size: 12.5px;
 }
 footer p { padding: 14px 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; }
+
+.budget-second { margin-top: 12px; }

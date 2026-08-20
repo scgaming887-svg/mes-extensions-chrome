@@ -40,6 +40,12 @@ function render() {
   document.getElementById('budget-val').className = 'budget-val' + (budget == null ? ' no-limit' : '');
   const slider = document.getElementById('budget');
   slider.style.setProperty('--fill', Math.round((slider.value / LAST) * 100) + '%');
+
+  const min = cfg.filters.minPrice;
+  const minVal = document.getElementById('min-val');
+  minVal.textContent = min == null ? 'aucun' : min.toLocaleString('fr-CA') + ' $';
+  minVal.className = 'budget-val' + (min == null ? ' no-limit' : '');
+  RFPRank.paintRange(document.getElementById('minPrice'), RFPRank.MIN_STOPS);
   document.getElementById('mode').textContent = r.items.length ? r.mode.label : '';
 
   const inBudget = r.items.filter(it => budget == null || (it.price != null && it.price <= budget));
@@ -150,10 +156,23 @@ function row(it, best) {
 /* ============================================================
    Branchements
    ============================================================ */
-document.getElementById('budget').addEventListener('input', e => {
-  cfg.filters.maxPrice = STOPS[Number(e.target.value)];
+/* les deux bornes ne peuvent pas se croiser */
+function bornes(qui) {
+  RFPRank.clampBounds(cfg.filters, qui);
+  RFPRank.setupRange(document.getElementById('minPrice'), RFPRank.MIN_STOPS, cfg.filters.minPrice);
+  RFPRank.setupSlider(document.getElementById('budget'), cfg.filters.maxPrice);
   chrome.storage.local.set({ filters: cfg.filters });
   render();
+}
+
+document.getElementById('budget').addEventListener('input', e => {
+  cfg.filters.maxPrice = STOPS[Number(e.target.value)];
+  bornes('max');
+});
+
+document.getElementById('minPrice').addEventListener('input', e => {
+  cfg.filters.minPrice = RFPRank.MIN_STOPS[Number(e.target.value)];
+  bornes('min');
 });
 
 document.getElementById('sort').addEventListener('change', e => {
@@ -168,6 +187,7 @@ chrome.storage.onChanged.addListener(ch => {
   if (ch.results) { cfg.results = ch.results.newValue || {}; render(); }
   if (ch.filters) {
     cfg.filters = ch.filters.newValue || cfg.filters;
+    RFPRank.setupRange(document.getElementById('minPrice'), RFPRank.MIN_STOPS, cfg.filters.minPrice);
     RFPRank.setupSlider(document.getElementById('budget'), cfg.filters.maxPrice);
     render();
   }
@@ -178,6 +198,7 @@ function load() {
     cfg = Object.assign({}, DEFAULTS, res);
     cfg.filters = Object.assign({}, DEFAULTS.filters, res.filters || {});
     cfg.results = res.results || {};
+    RFPRank.setupRange(document.getElementById('minPrice'), RFPRank.MIN_STOPS, cfg.filters.minPrice);
     RFPRank.setupSlider(document.getElementById('budget'), cfg.filters.maxPrice);
     render();
   });

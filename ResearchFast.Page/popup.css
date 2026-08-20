@@ -180,3 +180,5 @@ input[type=range]:active::-webkit-slider-thumb { transform: scale(1.12); }
 .res .k-product { color: #ffc857; }
 .res .k-seller { color: #7ee0a0; }
 .res .k-none { color: #6a7288; font-style: italic; }
+
+.budget-second { margin-top: 12px; }

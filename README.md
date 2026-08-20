@@ -82,7 +82,7 @@ Un compagnon animé qui vit en bas de tes pages.
 <td><img src="ResearchFast.Page/icons/icon128.png" width="64"></td>
 <td>
 
-### ResearchFast.Page · v1.2.1
+### ResearchFast.Page · v1.3.0
 [⬇️ Télécharger](https://scgaming887-svg.github.io/mes-extensions-chrome/downloads/ResearchFast.Page.zip)
 
 Trouve la meilleure offre pour ce que tu cherches.
@@ -90,7 +90,7 @@ Trouve la meilleure offre pour ce que tu cherches.
 - Tape ton article : l'extension ouvre la recherche sur **Amazon, eBay et Marketplace** d'un coup
 - **Page de comparaison** : une colonne par site, remplie en direct pendant que les onglets se scannent en arrière-plan — plus besoin de les visiter un par un
 - Elle lit chaque page de résultats et en extrait titre, prix, note et fiabilité
-- **Curseur de budget jusqu'à 100 000 $**, avec refiltrage instantané sans rescanner
+- **Deux curseurs de prix** — un minimum et un budget maximum, jusqu'à 100 000 $ — avec refiltrage instantané sans rescanner. Ils ne peuvent pas se croiser : celui qu'on ne bouge pas cède
 - **Le classement s'adapte à ton budget** (voir plus bas)
 - **La note veut dire ce qu'elle dit** : Amazon note le produit, eBay note le **vendeur**, Marketplace ne publie rien
 - Écarte les accessoires : chercher « casque bluetooth » ne remonte pas les étuis pour casque

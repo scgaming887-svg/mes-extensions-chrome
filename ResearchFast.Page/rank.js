@@ -31,22 +31,50 @@ var RFPRank = (function () {
   })();
   const LAST = STOPS.length - 1;
 
-  function stopIndex(value) {
-    if (value == null) return LAST;
-    let best = 0;
-    for (let i = 0; i < LAST; i++) {
-      if (Math.abs(STOPS[i] - value) < Math.abs(STOPS[best] - value)) best = i;
+  /* Memes paliers pour le prix minimum, mais "aucun" se trouve en bas
+     de la course au lieu du haut : la position 0 veut dire "pas de minimum". */
+  const MIN_STOPS = [null].concat(STOPS.slice(0, LAST));
+  const MIN_LAST = MIN_STOPS.length - 1;
+
+  /* position du palier le plus proche d'une valeur, dans n'importe quelle liste */
+  function indexIn(list, value) {
+    if (value == null) return list.indexOf(null);
+    let best = -1;
+    for (let i = 0; i < list.length; i++) {
+      if (list[i] == null) continue;
+      if (best < 0 || Math.abs(list[i] - value) < Math.abs(list[best] - value)) best = i;
     }
-    return best;
+    return best < 0 ? 0 : best;
   }
 
-  /* prepare un curseur : borne haute et position, sans dependre du HTML */
-  function setupSlider(slider, value) {
+  const stopIndex = value => indexIn(STOPS, value);
+  const minIndex  = value => indexIn(MIN_STOPS, value);
+
+  /* prepare un curseur : bornes, position et remplissage, sans dependre du HTML */
+  function setupRange(slider, list, value) {
+    const last = list.length - 1;
     slider.min = 0;
-    slider.max = LAST;
+    slider.max = last;
     slider.step = 1;
-    slider.value = stopIndex(value);
-    slider.style.setProperty('--fill', Math.round((slider.value / LAST) * 100) + '%');
+    slider.value = indexIn(list, value);
+    paintRange(slider, list);
+  }
+
+  function paintRange(slider, list) {
+    const last = list.length - 1;
+    slider.style.setProperty('--fill', Math.round((slider.value / last) * 100) + '%');
+  }
+
+  const setupSlider = (slider, value) => setupRange(slider, STOPS, value);
+
+  /* Le minimum ne peut pas depasser le maximum : on rabat celui qu'on
+     ne vient PAS de bouger, pour que le curseur suive le doigt. */
+  function clampBounds(filters, bouge) {
+    if (filters.minPrice == null || filters.maxPrice == null) return filters;
+    if (filters.minPrice <= filters.maxPrice) return filters;
+    if (bouge === 'min') filters.maxPrice = filters.minPrice;
+    else filters.minPrice = filters.maxPrice;
+    return filters;
   }
 
   /* les sites connus, au meme endroit pour les trois interfaces */
@@ -220,8 +248,9 @@ var RFPRank = (function () {
     return { kind: 'none', text: 'note vendeur indisponible', sub: '' };
   }
 
-  return { rank, weights, qualityOf, ratingLabel, merge, norm, median,
-           SITES_META, STOPS, LAST, stopIndex, setupSlider };
+  return { rank, weights, qualityOf, ratingLabel, merge, norm, median, SITES_META,
+           STOPS, LAST, stopIndex, setupSlider,
+           MIN_STOPS, MIN_LAST, minIndex, setupRange, paintRange, clampBounds };
 })();
 
 /* utilisable aussi bien dans le popup que dans la page */

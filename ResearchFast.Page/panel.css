@@ -207,3 +207,4 @@
 #rfp-panel .rfp-star.is-product { color: #ffc857 !important; }
 #rfp-panel .rfp-star.is-seller  { color: #7ee0a0 !important; }
 #rfp-panel .rfp-star.is-none    { color: #6a7288 !important; font-style: italic !important; font-weight: 400 !important; }
+#rfp-panel .rfp-budget-top.rfp-second { margin-top: 11px !important; }

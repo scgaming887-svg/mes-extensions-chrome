@@ -330,7 +330,19 @@ function buildPanel() {
 
   /* --- curseur de budget --- */
   const bud = el('div', 'rfp-budget');
-  const bTop = el('div', 'rfp-budget-top');
+
+  /* --- prix minimum --- */
+  const mTop = el('div', 'rfp-budget-top');
+  const mVal = el('span', 'rfp-budget-val');
+  mTop.append(el('span', 'rfp-budget-lbl', 'Prix minimum'), mVal);
+
+  const minRange = document.createElement('input');
+  minRange.type = 'range';
+  minRange.className = 'rfp-range';
+  RFPRank.setupRange(minRange, RFPRank.MIN_STOPS, state.filters.minPrice);
+
+  /* --- budget maximum --- */
+  const bTop = el('div', 'rfp-budget-top rfp-second');
   const bVal = el('span', 'rfp-budget-val');
   bTop.append(el('span', 'rfp-budget-lbl', 'Budget max'), bVal);
 
@@ -338,16 +350,32 @@ function buildPanel() {
   range.type = 'range';
   range.className = 'rfp-range';
   RFPRank.setupSlider(range, state.budget);
-  range.addEventListener('input', () => {
-    state.budget = STOPS[Number(range.value)];
+
+  /* Les deux bornes ne peuvent pas se croiser : celle qu'on ne bouge pas cede.
+     Le minimum filtre le classement, donc on reclasse a chaque changement. */
+  const bouge = qui => {
+    RFPRank.clampBounds(state.filters, qui);
+    state.budget = state.filters.maxPrice;
+    RFPRank.setupRange(minRange, RFPRank.MIN_STOPS, state.filters.minPrice);
+    RFPRank.setupSlider(range, state.budget);
     rescore();
     paintBudget();
     renderList();
     saveBudget();
+  };
+
+  minRange.addEventListener('input', () => {
+    state.filters.minPrice = RFPRank.MIN_STOPS[Number(minRange.value)];
+    bouge('min');
+  });
+
+  range.addEventListener('input', () => {
+    state.filters.maxPrice = STOPS[Number(range.value)];
+    bouge('max');
   });
 
   const mode = el('div', 'rfp-mode');
-  bud.append(bTop, range, mode);
+  bud.append(mTop, minRange, bTop, range, mode);
   panelMode = mode;
 
   /* --- barre de tri --- */
@@ -382,6 +410,8 @@ function buildPanel() {
   panel._list = list;
   panel._range = range;
   panel._bval = bVal;
+  panel._minRange = minRange;
+  panel._mval = mVal;
   paintBudget();
 }
 
@@ -390,6 +420,12 @@ function paintBudget() {
   const b = state.budget;
   panel._bval.textContent = b == null ? 'sans limite' : b.toLocaleString('fr-CA') + ' $';
   panel._bval.classList.toggle('is-open', b == null);
+
+  const m = state.filters.minPrice;
+  panel._mval.textContent = m == null ? 'aucun' : m.toLocaleString('fr-CA') + ' $';
+  panel._mval.classList.toggle('is-open', m == null);
+
+  RFPRank.paintRange(panel._minRange, RFPRank.MIN_STOPS);
   panel._range.style.setProperty('--fill', Math.round((panel._range.value / LAST) * 100) + '%');
   if (panelMode && state.mode) panelMode.textContent = state.mode.label;
 }
@@ -401,6 +437,7 @@ function saveBudget() {
     chrome.storage.local.get({ filters: {} }, r => {
       const f = r.filters || {};
       f.maxPrice = state.budget;
+      f.minPrice = state.filters.minPrice;
       chrome.storage.local.set({ filters: f });
     });
   }, 250);
@@ -567,13 +604,19 @@ chrome.storage.local.get({ query: '', searchStamp: 0, results: {} }, cfg => {
 /* si le budget est bouge depuis le popup, le panneau suit */
 chrome.storage.onChanged.addListener(ch => {
   if (!ch.filters || !panel) return;
-  const max = (ch.filters.newValue || {}).maxPrice;
-  const value = max != null ? max : null;
-  if (value === state.budget) return;
-  state.budget = value;
-  state.filters = ch.filters.newValue || state.filters;
+
+  const f = ch.filters.newValue || {};
+  const max = f.maxPrice != null ? f.maxPrice : null;
+  const min = f.minPrice != null ? f.minPrice : null;
+
+  /* rien de neuf sur les deux bornes : inutile de tout refaire */
+  if (max === state.budget && min === state.filters.minPrice) return;
+
+  state.filters = f;
+  state.budget = max;
   rescore();
-  panel._range.value = stopIndex(value);
+  RFPRank.setupRange(panel._minRange, RFPRank.MIN_STOPS, min);
+  RFPRank.setupSlider(panel._range, max);
   paintBudget();
   renderList();
 });
