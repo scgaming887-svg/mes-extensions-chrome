@@ -200,6 +200,16 @@ const SITES = [
   {
     id: 'bestbuy', name: 'Best Buy', delay: 1800,
     test: h => /(^|\.)bestbuy\./.test(h),
+
+    /* Best Buy change son adresse de recherche sans prevenir et bloque toute
+       verification automatique. Plutot que de deviner un chemin qui finit en
+       404, on ouvre son accueil et on tape dans SON champ de recherche : c'est
+       le site lui-meme qui fabrique la bonne adresse. */
+    searchBox: ['input[type="search"]', '#globalSearchInput', 'input[name="search"]',
+                'input[placeholder*="echerch"]', 'input[aria-label*="echerch"]',
+                'input[aria-label*="Search"]', 'header input[type="text"]'],
+    isResults: () => location.search.length > 1 ||
+                     /\/(search|collection|category)/i.test(location.pathname),
     parse() {
       const out = [];
       const seen = new Set();
@@ -656,6 +666,58 @@ function run(silent) {
   });
 }
 
+/* ============================================================
+   Recherche tapee dans le champ du site
+   ------------------------------------------------------------
+   Pour les boutiques dont on ne connait pas l'adresse de recherche,
+   on remplit leur propre champ et on valide. Le site produit alors
+   l'adresse correcte, et le scan se declenche sur ses resultats.
+   ============================================================ */
+function typeSearch(q) {
+  const input = first(document, SITE.searchBox);
+  if (!input) return false;
+
+  /* les champs pilotes par React ignorent une simple affectation :
+     il faut passer par le setter natif puis annoncer l'evenement */
+  try {
+    const natif = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
+    if (natif && natif.set) natif.set.call(input, q);
+    else input.value = q;
+  } catch (e) {
+    input.value = q;
+  }
+  input.dispatchEvent(new Event('input', { bubbles: true }));
+  input.dispatchEvent(new Event('change', { bubbles: true }));
+  input.focus();
+
+  toast('Recherche de « ' + q + ' » sur ' + SITE.name + '...');
+
+  setTimeout(() => {
+    if (input.form && input.form.requestSubmit) {
+      input.form.requestSubmit();
+    } else {
+      ['keydown', 'keypress', 'keyup'].forEach(t => {
+        input.dispatchEvent(new KeyboardEvent(t, {
+          key: 'Enter', code: 'Enter', keyCode: 13, which: 13, bubbles: true
+        }));
+      });
+    }
+  }, 300);
+
+  /* ces sites naviguent souvent sans recharger la page : on guette
+     le changement d'adresse pour lancer le scan au bon moment */
+  let derniere = location.href;
+  const veille = setInterval(() => {
+    if (location.href === derniere) return;
+    derniere = location.href;
+    clearInterval(veille);
+    setTimeout(() => run(true), 1600);
+  }, 400);
+  setTimeout(() => clearInterval(veille), 25000);
+
+  return true;
+}
+
 /* bouton flottant discret quand on n'a rien demande */
 function launcher() {
   const b = el('button', 'rfp-launcher', '🔎');
@@ -675,8 +737,22 @@ chrome.storage.local.get({ query: '', searchStamp: 0, results: {} }, cfg => {
   const mine = (cfg.results || {})[SITE.id];
   const aFaire = cfg.searchStamp && cfg.query &&
                  (!mine || mine.stamp !== cfg.searchStamp || mine.url !== location.href);
-  if (aFaire) setTimeout(() => run(true), SITE.delay);
-  else launcher();
+
+  if (!aFaire) { launcher(); return; }
+
+  /* site sans adresse de recherche connue, et on n'est pas encore sur ses
+     resultats : on tape la recherche dans son propre champ */
+  if (SITE.searchBox && SITE.isResults && !SITE.isResults()) {
+    setTimeout(() => {
+      if (!typeSearch(cfg.query)) {
+        toast('Tape ta recherche ici, le scan se fera tout seul.');
+        launcher();
+      }
+    }, SITE.delay);
+    return;
+  }
+
+  setTimeout(() => run(true), SITE.delay);
 });
 
 /* si le budget est bouge depuis le popup, le panneau suit */

@@ -23,13 +23,13 @@ const SEARCH = {
   },
   bestbuy: {
     name: 'Best Buy', icon: '🟨',
-    /* Best Buy n'existe qu'au Canada et aux Etats-Unis : ailleurs, url() rend
-       null et le site est simplement saute, avec un message. */
-    url: (q, r) => r === 'com'
-      ? 'https://www.bestbuy.com/site/searchpage.jsp?st=' + encodeURIComponent(q)
-      : r === 'ca'
-        ? 'https://www.bestbuy.ca/fr-ca/search?search=' + encodeURIComponent(q)
-        : null
+    /* On ouvre l'accueil, pas une adresse de recherche devinee : Best Buy
+       change la sienne et bloque toute verification, et un mauvais chemin
+       donne une page 404. Le script tape la recherche dans leur champ.
+       L'enseigne n'existe qu'au Canada et aux Etats-Unis. */
+    url: (q, r) => r === 'com' ? 'https://www.bestbuy.com'
+                 : r === 'ca'  ? 'https://www.bestbuy.ca/fr-ca'
+                 : null
   },
   facebook: {
     name: 'Marketplace', icon: '🛒',

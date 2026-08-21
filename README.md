@@ -82,7 +82,7 @@ Un compagnon animé qui vit en bas de tes pages.
 <td><img src="ResearchFast.Page/icons/icon128.png" width="64"></td>
 <td>
 
-### ResearchFast.Page · v1.4.0
+### ResearchFast.Page · v1.4.1
 [⬇️ Télécharger](https://scgaming887-svg.github.io/mes-extensions-chrome/downloads/ResearchFast.Page.zip)
 
 Trouve la meilleure offre pour ce que tu cherches.
@@ -96,6 +96,7 @@ Trouve la meilleure offre pour ce que tu cherches.
 - Écarte les accessoires : chercher « casque bluetooth » ne remonte pas les étuis pour casque
 - Filtres : prix minimum, note minimale, mots à exclure, masquer les sponsorisés
 - Mode générique de secours sur les autres boutiques
+- Sur Best Buy, la recherche est **tapée dans le champ du site** : son adresse de recherche change sans prévenir, donc on la laisse la fabriquer elle-même
 
 </td>
 </tr>
@@ -144,6 +145,22 @@ Deux principes derrière ça :
   classement pousserait toujours vers le moins cher et le budget ne servirait à rien.
 - **Un article mal noté ne prend jamais la tête.** Sous 3,5 ★, il subit un malus même en
   chasse au prix. Un rabais ne rachète pas trois étoiles.
+
+### Les boutiques couvertes
+
+| Boutique | Comment la recherche est lancée | Pays |
+|---|---|---|
+| Amazon | adresse directe `/s?k=` | .ca · .com · .fr |
+| eBay | adresse directe `_nkw=` | .ca · .com · .fr |
+| Best Buy | on ouvre l'accueil et l'extension tape dans son champ de recherche | Canada · États-Unis |
+| Marketplace | adresse directe `/marketplace/search/` | partout |
+| Autres boutiques | bouton 🔎 pour scanner la page affichée | partout |
+
+Best Buy est un cas à part : leur adresse de recherche a changé et **bloque toute
+vérification automatique**, si bien qu'un chemin deviné retombe sur une page 404.
+L'extension ouvre donc leur accueil, remplit leur propre champ et valide — c'est le
+site qui produit la bonne adresse. Si le champ est introuvable, tu tapes ta recherche
+toi-même et le scan se déclenche quand même.
 
 ### Ce que « la note » signifie sur chaque site
 
