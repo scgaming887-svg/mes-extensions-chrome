@@ -82,7 +82,7 @@ Un compagnon animé qui vit en bas de tes pages.
 <td><img src="ResearchFast.Page/icons/icon128.png" width="64"></td>
 <td>
 
-### ResearchFast.Page · v1.4.3
+### ResearchFast.Page · v1.4.4
 [⬇️ Télécharger](https://scgaming887-svg.github.io/mes-extensions-chrome/downloads/ResearchFast.Page.zip)
 
 Trouve la meilleure offre pour ce que tu cherches.
@@ -96,6 +96,7 @@ Trouve la meilleure offre pour ce que tu cherches.
 - Écarte les accessoires : chercher « casque bluetooth » ne remonte pas les étuis pour casque
 - Filtres : prix minimum, note minimale, mots à exclure, masquer les sponsorisés
 - Mode générique de secours sur les autres boutiques
+- Quand une liste est vide, le panneau **dit pourquoi** : page non reconnue, aucune annonce ne correspond à la recherche, ou tout dépasse le budget
 - Sur Best Buy, la recherche est **tapée dans le champ du site** : son adresse de recherche change sans prévenir, donc on la laisse la fabriquer elle-même
 
 </td>

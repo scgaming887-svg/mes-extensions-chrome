@@ -218,7 +218,11 @@ var RFPRank = (function () {
       items: kept,
       mode: w,
       median: median(prices),
-      cheapest: prices.length ? lo : null
+      cheapest: prices.length ? lo : null,
+      /* de quoi expliquer un resultat vide : combien d'annonces sont
+         entrees, combien ont ete ecartees par la recherche et les filtres */
+      lus: items.length,
+      ecartes: items.length - kept.length
     };
   }
 

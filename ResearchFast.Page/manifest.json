@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "ResearchFast.Page",
-  "version": "1.4.3",
+  "version": "1.4.4",
   "description": "Cherche un article, scanne la page de resultats et classe les meilleures offres : Amazon, eBay, Marketplace et autres.",
   "icons": {
     "16": "icons/icon16.png",

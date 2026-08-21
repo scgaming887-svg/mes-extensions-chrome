@@ -90,18 +90,21 @@ function sellerOf(card, selectors) {
 function bestbuyPrice(el) {
   if (!el) return null;
 
-  const sup = el.querySelector && el.querySelector('sup');
-  if (!sup) return parsePrice(txt(el));
-
   const complet = txt(el);
-  const cents = txt(sup);
-  const base = cents && complet.endsWith(cents)
-    ? complet.slice(0, complet.length - cents.length)
-    : complet;
+  const sup = el.querySelector && el.querySelector('sup');
+  if (!sup) return parsePrice(complet);
 
-  const entier = parsePrice(base);
+  const cents = txt(sup);
+  /* on retire l'exposant du texte, ou qu'il se trouve */
+  const sansSup = cents ? complet.replace(cents, '') : complet;
+  const entier = parsePrice(sansSup);
+  if (entier == null) return parsePrice(complet);
+
+  /* si le reste portait deja des decimales ("185,49 $"), l'exposant n'etait
+     qu'un habillage : la lecture normale est la bonne */
+  if (/[.,]\d{2}/.test(sansSup)) return entier;
+
   const c = cents.replace(/\D/g, '');
-  if (entier == null) return null;
   return c ? entier + Number(c) / 100 : entier;
 }
 
@@ -231,19 +234,22 @@ const SITES = [
         const url = link.href;
         if (!url || seen.has(url)) return;
 
-        /* on remonte jusqu'a la carte qui contient le prix */
+        /* On remonte jusqu'au premier ancetre qui contient un montant : c'est
+           la vignette. Se fier a la longueur du texte ne marchait pas — le
+           lien du titre est deja long, donc on ne montait jamais jusqu'au prix.
+           Chercher une classe precise ne marche pas non plus : Best Buy les
+           renomme a chaque deploiement. */
         let card = link, depth = 0;
-        while (card && depth < 6) {
-          if (card.querySelector && card.querySelector('[data-automation*="price"], [class*="price"]')) break;
+        while (card.parentElement && depth < 6 && txt(card).indexOf('$') === -1) {
           card = card.parentElement;
           depth++;
         }
-        if (!card) card = link;
 
         const title = cleanTitle(
-          txt(first(card, ['[data-automation="productItemName_link"]', 'h3', 'h4'])) ||
-          link.getAttribute('aria-label') || txt(link));
-        if (!title || title.length < 4) return;
+          txt(link).length > 7 ? txt(link)
+          : (link.getAttribute('aria-label') ||
+             txt(first(card, ['[data-automation*="Name"]', 'h3', 'h4'])) || txt(link)));
+        if (!title || title.length < 5) return;
         seen.add(url);
 
         /* d'abord l'element de prix, puis a defaut le texte entier de la
@@ -262,7 +268,12 @@ const SITES = [
           if (m) rating = parsePrice(m[1]);
         }
         const revEl = first(card, ['[data-automation="rating-count"]', '[class*="ratingCount"]']);
-        const reviews = revEl ? parsePrice(txt(revEl)) : null;
+        let reviews = revEl ? parsePrice(txt(revEl)) : null;
+        if (reviews == null) {
+          /* a defaut, le nombre entre parentheses : "(77)" */
+          const m = txt(card).match(/\((\d[\d\s.,]*)\)/);
+          if (m) reviews = parsePrice(m[1]);
+        }
 
         const img = card.querySelector('img');
 
@@ -344,9 +355,12 @@ const SITES = [
       /* on cherche les petits blocs de texte qui ressemblent a un prix,
          puis on remonte jusqu'a la carte produit qui les contient */
       document.querySelectorAll('span, div, p, strong, b').forEach(node => {
-        if (node.children.length) return;
+        /* On accepte les petits conteneurs, pas seulement les feuilles :
+           un prix est souvent decoupe ("185," + <sup>49</sup> + " $"), et
+           n'apparait entier que sur l'element qui les regroupe. */
+        if (node.children.length > 3) return;
         const t = txt(node);
-        if (t.length > 24 || !RE.test(t)) return;
+        if (t.length > 30 || !RE.test(t)) return;
 
         const price = parsePrice(t);
         if (!price) return;
@@ -564,6 +578,9 @@ function renderList() {
     const empty = el('div', 'rfp-empty');
     const cheap = state.all.filter(it => it.price != null).sort((a, b) => a.price - b.price)[0];
 
+    /* Trois raisons possibles a une liste vide, et il faut dire laquelle :
+       la page n'a pas ete comprise, la recherche a tout ecarte, ou tout
+       depasse le budget. Un "rien trouve" indistinct n'aide personne. */
     if (state.all.length && state.budget != null) {
       empty.append(
         el('div', 'rfp-empty-icon', '💸'),
@@ -571,11 +588,22 @@ function renderList() {
         el('div', 'rfp-empty-sub', cheap
           ? 'Le moins cher ici est à ' + Math.round(cheap.price).toLocaleString('fr-CA') + ' $.'
           : 'Remonte le curseur.'));
+
+    } else if (state.raw.length) {
+      /* des annonces ont bien ete lues, mais aucune n'a passe les filtres */
+      empty.append(
+        el('div', 'rfp-empty-icon', '🔍'),
+        el('div', null, state.raw.length + ' annonces lues, aucune ne correspond.'),
+        el('div', 'rfp-empty-sub', state.query
+          ? 'Aucune ne contient « ' + state.query + ' ». Essaie moins de mots, ou vérifie les filtres.'
+          : 'Vérifie le prix minimum, la note minimale et les mots exclus.'));
+
     } else {
       empty.append(
         el('div', 'rfp-empty-icon', '🤷'),
-        el('div', null, 'Rien trouvé sur cette page.'),
-        el('div', 'rfp-empty-sub', 'Lance une recherche sur le site, puis rescanne.'));
+        el('div', null, 'Page non reconnue.'),
+        el('div', 'rfp-empty-sub',
+           'Aucune annonce lisible ici. Lance une recherche sur le site, puis rescanne.'));
     }
     list.appendChild(empty);
     return;
