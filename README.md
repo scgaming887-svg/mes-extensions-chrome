@@ -82,7 +82,7 @@ Un compagnon animé qui vit en bas de tes pages.
 <td><img src="ResearchFast.Page/icons/icon128.png" width="64"></td>
 <td>
 
-### ResearchFast.Page · v1.4.2
+### ResearchFast.Page · v1.4.3
 [⬇️ Télécharger](https://scgaming887-svg.github.io/mes-extensions-chrome/downloads/ResearchFast.Page.zip)
 
 Trouve la meilleure offre pour ce que tu cherches.
@@ -160,9 +160,13 @@ Best Buy est un cas à part : **son chemin de recherche est traduit**. En franç
 `/fr-ca/chercher`, pas `/fr-ca/search` — ce dernier renvoie une page 404. Le site bloquant
 toute vérification automatique (403), l'adresse a dû être relevée depuis un vrai navigateur.
 
-Filet de sécurité : si une page de résultats ne donne rien — parce qu'ils auraient encore
-changé leur adresse — l'extension **tape la recherche dans leur propre champ** et laisse le
-site fabriquer la bonne adresse. Elle se répare donc toute seule.
+Même chose pour les fiches produit : `/fr-ca/produit/` en français, `/product/` en anglais.
+L'extension reconnaît les deux.
+
+Filet de sécurité : si l'extension atterrit ailleurs que sur des résultats — 404, accueil,
+adresse changée — elle **tape la recherche dans leur propre champ** et laisse le site
+fabriquer la bonne adresse. Et dans tous les cas elle finit par enregistrer un résultat,
+même vide : une colonne du comparateur ne peut jamais rester bloquée sur « scan en cours ».
 
 ### Ce que « la note » signifie sur chaque site
 

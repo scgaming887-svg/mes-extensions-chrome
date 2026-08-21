@@ -105,6 +105,15 @@ function bestbuyPrice(el) {
   return c ? entier + Number(c) / 100 : entier;
 }
 
+/* Premier montant "123,45 $" trouve dans un texte. Sert de secours quand
+   l'element de prix est introuvable : le texte complet d'une carte
+   recolle les morceaux, meme si le prix est eclate en plusieurs noeuds. */
+function priceFromText(t) {
+  const m = String(t || '').replace(/ /g, ' ')
+    .match(/(\d[\d\s.,]*[.,]\d{2})\s*\$|\$\s*(\d[\d\s.,]*)/);
+  return m ? parsePrice(m[1] || m[2]) : null;
+}
+
 /* eBay colle des mentions d accessibilite a la fin des titres */
 function cleanTitle(t) {
   return String(t || '')
@@ -214,9 +223,11 @@ const SITES = [
       const out = [];
       const seen = new Set();
 
-      /* Chaque vignette pointe vers /product/... : on part des liens, plus
-         stables que les classes generees par leur outil de compilation. */
-      document.querySelectorAll('a[href*="/product/"]').forEach(link => {
+      /* Chaque vignette pointe vers la fiche produit : on part des liens, plus
+         stables que les classes generees par leur outil de compilation.
+         ATTENTION : le chemin est traduit, comme pour la recherche.
+         En francais c'est /produit/, en anglais /product/. */
+      document.querySelectorAll('a[href*="/product/"], a[href*="/produit/"]').forEach(link => {
         const url = link.href;
         if (!url || seen.has(url)) return;
 
@@ -235,9 +246,13 @@ const SITES = [
         if (!title || title.length < 4) return;
         seen.add(url);
 
-        const price = bestbuyPrice(
+        /* d'abord l'element de prix, puis a defaut le texte entier de la
+           carte : le montant y est reconstitue meme s'il est decoupe en
+           plusieurs noeuds ("185," + "49" + " $") */
+        let price = bestbuyPrice(
           first(card, ['[data-automation="product-price"] span', '[data-automation="product-price"]',
-                       '[class*="price"] span', '[class*="price"]']));
+                       '[data-automation*="price"]', '[class*="price"] span', '[class*="price"]']));
+        if (price == null) price = priceFromText(txt(card));
 
         /* la note vient de la fiche produit, comme chez Amazon */
         let rating = null;
@@ -640,13 +655,6 @@ function run(silent) {
       try { raw = SITES[SITES.length - 1].parse() || []; } catch (e) { raw = []; }
     }
 
-    /* Rien du tout, alors qu'une recherche etait demandee : l'adresse a
-       probablement change de leur cote (Best Buy traduit ses chemins et les
-       modifie sans prevenir). On se rattrape en tapant dans leur champ. */
-    if (!raw.length && SITE.searchBox && !secoursTente && cfg.searchStamp && cfg.query) {
-      secoursTente = true;
-      if (typeSearch(cfg.query)) return;
-    }
 
     const filters = cfg.filters || {};
     state.query = cfg.query || '';
@@ -666,10 +674,22 @@ function run(silent) {
       when: Date.now(),
       items: state.all.slice(0, 40)
     };
+    /* On enregistre TOUJOURS, meme une liste vide : sinon la colonne de la
+       page de comparaison reste indefiniment sur "scan en cours". */
     chrome.storage.local.set({ results });
 
     buildPanel();
     renderList();
+
+    /* Rien trouve et on n'est pas sur une page de resultats (404, accueil,
+       adresse changee de leur cote) : on se rattrape en tapant dans leur
+       propre champ de recherche. Une seule fois par page. */
+    if (!state.all.length && SITE.searchBox && SITE.isResults && !SITE.isResults()
+        && !secoursTente && cfg.searchStamp && cfg.query) {
+      secoursTente = true;
+      typeSearch(cfg.query);
+      return;
+    }
 
     if (!silent && !state.all.length) toast('Aucune annonce reconnue ici.');
   });
@@ -723,6 +743,13 @@ function typeSearch(q) {
     setTimeout(() => run(true), 1600);
   }, 400);
   setTimeout(() => clearInterval(veille), 25000);
+
+  /* Garantie : si la saisie ne mene nulle part, on scanne quand meme la page
+     au bout de 12 s. Sans ca, la colonne du comparateur resterait
+     indefiniment sur "scan en cours". */
+  setTimeout(() => {
+    if (location.href === derniere) run(true);
+  }, 12000);
 
   return true;
 }
