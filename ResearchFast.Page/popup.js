@@ -23,13 +23,17 @@ const SEARCH = {
   },
   bestbuy: {
     name: 'Best Buy', icon: '🟨',
-    /* On ouvre l'accueil, pas une adresse de recherche devinee : Best Buy
-       change la sienne et bloque toute verification, et un mauvais chemin
-       donne une page 404. Le script tape la recherche dans leur champ.
+    /* Attention : chez Best Buy le chemin est TRADUIT. En francais c'est
+       /fr-ca/chercher, pas /fr-ca/search — ce dernier renvoie une 404.
+       Si l'adresse changeait encore, le script sait se rattraper en tapant
+       dans leur propre champ de recherche.
        L'enseigne n'existe qu'au Canada et aux Etats-Unis. */
-    url: (q, r) => r === 'com' ? 'https://www.bestbuy.com'
-                 : r === 'ca'  ? 'https://www.bestbuy.ca/fr-ca'
-                 : null
+    url: (q, r) => {
+      const mots = encodeURIComponent(q).replace(/%20/g, '+');
+      if (r === 'com') return 'https://www.bestbuy.com/site/searchpage.jsp?st=' + mots;
+      if (r === 'ca')  return 'https://www.bestbuy.ca/fr-ca/chercher?search=' + mots;
+      return null;
+    }
   },
   facebook: {
     name: 'Marketplace', icon: '🛒',

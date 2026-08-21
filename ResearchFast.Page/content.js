@@ -375,6 +375,7 @@ const SITE = SITES.find(s => s.test(location.hostname)) || SITES[SITES.length - 
 const STOPS = RFPRank.STOPS, LAST = RFPRank.LAST, stopIndex = RFPRank.stopIndex;
 
 let panel = null, panelMode = null;
+let secoursTente = false;   /* une seule tentative de rattrapage par page */
 let state = { raw: [], all: [], query: '', sort: 'score', budget: null, filters: {}, mode: null };
 
 /* Reclasse tout : la ponderation depend du budget, donc bouger le
@@ -637,6 +638,14 @@ function run(silent) {
     /* le lecteur generique sert de secours si le lecteur du site ne donne rien */
     if (!raw.length && !SITE.generic) {
       try { raw = SITES[SITES.length - 1].parse() || []; } catch (e) { raw = []; }
+    }
+
+    /* Rien du tout, alors qu'une recherche etait demandee : l'adresse a
+       probablement change de leur cote (Best Buy traduit ses chemins et les
+       modifie sans prevenir). On se rattrape en tapant dans leur champ. */
+    if (!raw.length && SITE.searchBox && !secoursTente && cfg.searchStamp && cfg.query) {
+      secoursTente = true;
+      if (typeSearch(cfg.query)) return;
     }
 
     const filters = cfg.filters || {};
