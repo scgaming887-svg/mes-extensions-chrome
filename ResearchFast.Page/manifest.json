@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "ResearchFast.Page",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "Cherche un article, scanne la page de resultats et classe les meilleures offres : Amazon, eBay, Marketplace et autres.",
   "icons": {
     "16": "icons/icon16.png",
@@ -42,7 +42,8 @@
         "*://*.kijiji.ca/*",
         "*://*.walmart.ca/*",
         "*://*.bestbuy.ca/*",
-        "*://*.aliexpress.com/*"
+        "*://*.aliexpress.com/*",
+        "*://*.bestbuy.com/*"
       ],
       "js": [
         "rank.js",

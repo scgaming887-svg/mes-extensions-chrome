@@ -82,12 +82,12 @@ Un compagnon animé qui vit en bas de tes pages.
 <td><img src="ResearchFast.Page/icons/icon128.png" width="64"></td>
 <td>
 
-### ResearchFast.Page · v1.3.0
+### ResearchFast.Page · v1.4.0
 [⬇️ Télécharger](https://scgaming887-svg.github.io/mes-extensions-chrome/downloads/ResearchFast.Page.zip)
 
 Trouve la meilleure offre pour ce que tu cherches.
 
-- Tape ton article : l'extension ouvre la recherche sur **Amazon, eBay et Marketplace** d'un coup
+- Tape ton article : l'extension ouvre la recherche sur **Amazon, eBay, Best Buy et Marketplace** d'un coup
 - **Page de comparaison** : une colonne par site, remplie en direct pendant que les onglets se scannent en arrière-plan — plus besoin de les visiter un par un
 - Elle lit chaque page de résultats et en extrait titre, prix, note et fiabilité
 - **Deux curseurs de prix** — un minimum et un budget maximum, jusqu'à 100 000 $ — avec refiltrage instantané sans rescanner. Ils ne peuvent pas se croiser : celui qu'on ne bouge pas cède
@@ -151,6 +151,7 @@ Deux principes derrière ça :
 |---|---|---|
 | Amazon | **le produit** | étoiles et nombre d'avis de la fiche |
 | eBay | **le vendeur** | son % d'avis positifs et son nombre de ventes — 90 % → 0 ★, 100 % → 5 ★ |
+| Best Buy | **le produit** | étoiles et nombre d'avis de la fiche · Canada et États-Unis seulement |
 | Marketplace | **rien** | Facebook ne publie aucune note sur ses pages de résultats |
 
 Chaque note est étiquetée et colorée selon sa nature, pour ne jamais mélanger « 4,7 ★ produit »

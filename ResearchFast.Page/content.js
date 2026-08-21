@@ -85,6 +85,26 @@ function sellerOf(card, selectors) {
   return null;
 }
 
+/* Best Buy ecrit les cents en exposant : "$449" + <sup>99</sup>.
+   Lu naivement, le texte donne "44999" -> 44 999 $. On separe les deux. */
+function bestbuyPrice(el) {
+  if (!el) return null;
+
+  const sup = el.querySelector && el.querySelector('sup');
+  if (!sup) return parsePrice(txt(el));
+
+  const complet = txt(el);
+  const cents = txt(sup);
+  const base = cents && complet.endsWith(cents)
+    ? complet.slice(0, complet.length - cents.length)
+    : complet;
+
+  const entier = parsePrice(base);
+  const c = cents.replace(/\D/g, '');
+  if (entier == null) return null;
+  return c ? entier + Number(c) / 100 : entier;
+}
+
 /* eBay colle des mentions d accessibilite a la fin des titres */
 function cleanTitle(t) {
   return String(t || '')
@@ -170,6 +190,64 @@ const SITES = [
           sellerPct: seller ? seller.pct : null,
           ratingKind: seller ? 'seller' : 'none',
           note: /gratuit|free/i.test(ship) ? 'livraison gratuite' : ''
+        });
+      });
+      return out;
+    }
+  },
+
+  /* ---------------- Best Buy ---------------- */
+  {
+    id: 'bestbuy', name: 'Best Buy', delay: 1800,
+    test: h => /(^|\.)bestbuy\./.test(h),
+    parse() {
+      const out = [];
+      const seen = new Set();
+
+      /* Chaque vignette pointe vers /product/... : on part des liens, plus
+         stables que les classes generees par leur outil de compilation. */
+      document.querySelectorAll('a[href*="/product/"]').forEach(link => {
+        const url = link.href;
+        if (!url || seen.has(url)) return;
+
+        /* on remonte jusqu'a la carte qui contient le prix */
+        let card = link, depth = 0;
+        while (card && depth < 6) {
+          if (card.querySelector && card.querySelector('[data-automation*="price"], [class*="price"]')) break;
+          card = card.parentElement;
+          depth++;
+        }
+        if (!card) card = link;
+
+        const title = cleanTitle(
+          txt(first(card, ['[data-automation="productItemName_link"]', 'h3', 'h4'])) ||
+          link.getAttribute('aria-label') || txt(link));
+        if (!title || title.length < 4) return;
+        seen.add(url);
+
+        const price = bestbuyPrice(
+          first(card, ['[data-automation="product-price"] span', '[data-automation="product-price"]',
+                       '[class*="price"] span', '[class*="price"]']));
+
+        /* la note vient de la fiche produit, comme chez Amazon */
+        let rating = null;
+        const aria = card.querySelector('[aria-label*="sur 5"], [aria-label*="out of 5"]');
+        if (aria) {
+          const m = (aria.getAttribute('aria-label') || '').match(/(\d+[.,]\d+|\d+)\s*(?:sur|out of)\s*5/i);
+          if (m) rating = parsePrice(m[1]);
+        }
+        const revEl = first(card, ['[data-automation="rating-count"]', '[class*="ratingCount"]']);
+        const reviews = revEl ? parsePrice(txt(revEl)) : null;
+
+        const img = card.querySelector('img');
+
+        out.push({
+          title, price, url,
+          img: img ? (img.src || img.getAttribute('data-src') || '') : '',
+          rating: rating != null && rating <= 5 ? rating : null,
+          reviews: reviews || null,
+          ratingKind: 'product',
+          note: ''
         });
       });
       return out;

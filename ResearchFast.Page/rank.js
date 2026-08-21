@@ -81,6 +81,7 @@ var RFPRank = (function () {
   const SITES_META = {
     amazon:   { name: 'Amazon',      icon: '📦', rates: 'le produit' },
     ebay:     { name: 'eBay',        icon: '🏷️', rates: 'le vendeur' },
+    bestbuy:  { name: 'Best Buy',    icon: '🟨', rates: 'le produit' },
     facebook: { name: 'Marketplace', icon: '🛒', rates: 'rien' },
     generic:  { name: 'Autre site',  icon: '🛍️', rates: 'rien' }
   };

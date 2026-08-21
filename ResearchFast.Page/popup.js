@@ -21,6 +21,16 @@ const SEARCH = {
     name: 'eBay', icon: '🏷️',
     url: (q, r) => 'https://www.ebay.' + (r === 'com' ? 'com' : r) + '/sch/i.html?_nkw=' + encodeURIComponent(q)
   },
+  bestbuy: {
+    name: 'Best Buy', icon: '🟨',
+    /* Best Buy n'existe qu'au Canada et aux Etats-Unis : ailleurs, url() rend
+       null et le site est simplement saute, avec un message. */
+    url: (q, r) => r === 'com'
+      ? 'https://www.bestbuy.com/site/searchpage.jsp?st=' + encodeURIComponent(q)
+      : r === 'ca'
+        ? 'https://www.bestbuy.ca/fr-ca/search?search=' + encodeURIComponent(q)
+        : null
+  },
   facebook: {
     name: 'Marketplace', icon: '🛒',
     url: q => 'https://www.facebook.com/marketplace/search/?query=' + encodeURIComponent(q)
@@ -295,19 +305,34 @@ document.getElementById('go').addEventListener('click', () => {
     cfg.results = {};
     refresh();
 
+    /* un site peut ne pas exister dans le pays choisi : on l'ecarte */
+    const ouvrables = [];
+    const absents = [];
+    cfg.sites.forEach(id => {
+      const url = SEARCH[id].url(cfg.query, cfg.region);
+      if (url) ouvrables.push({ id, url });
+      else absents.push(SEARCH[id].name);
+    });
+
+    if (!ouvrables.length) {
+      flash(absents.join(' et ') + ' n\'existe pas dans ce pays.');
+      return;
+    }
+
     /* plusieurs sites : la page de comparaison passe devant et se remplit
        toute seule pendant que les onglets de recherche scannent en fond. */
-    const compare = cfg.sites.length > 1;
+    const compare = ouvrables.length > 1;
     if (compare) chrome.tabs.create({ url: chrome.runtime.getURL('results.html'), active: true });
 
-    cfg.sites.forEach((id, i) => {
-      const url = SEARCH[id].url(cfg.query, cfg.region);
-      chrome.tabs.create({ url, active: !compare && i === 0 });
+    ouvrables.forEach((s, i) => {
+      chrome.tabs.create({ url: s.url, active: !compare && i === 0 });
     });
-    flash(compare
-      ? 'Comparaison de ' + cfg.sites.length + ' sites en cours...'
-      : 'Recherche lancée sur 1 site.');
-    setTimeout(() => window.close(), 600);
+
+    const note = absents.length ? ' (' + absents.join(', ') + ' : pas dans ce pays)' : '';
+    flash((compare
+      ? 'Comparaison de ' + ouvrables.length + ' sites en cours...'
+      : 'Recherche lancée sur 1 site.') + note);
+    setTimeout(() => window.close(), absents.length ? 1600 : 600);
   });
 });
 
