@@ -158,3 +158,19 @@ footer {
 footer p { padding: 14px 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; }
 
 .budget-second { margin-top: 12px; }
+
+/* ---- relancer une recherche sans repasser par le popup ---- */
+.relance { display: flex; gap: 8px; align-items: center; flex: 1; min-width: 260px; max-width: 420px; }
+.relance input[type=search] {
+  flex: 1; min-width: 0; padding: 9px 12px;
+  background: rgba(0, 0, 0, .3); border: 1px solid var(--line);
+  border-radius: 10px; color: var(--text); font: inherit; font-size: 13.5px;
+}
+.relance input[type=search]:focus { outline: none; border-color: var(--accent); }
+.relance input::placeholder { color: #6a7288; }
+.btn.go {
+  background: linear-gradient(100deg, var(--accent), var(--accent-2));
+  border: none; color: #04231d; font-weight: 700; white-space: nowrap;
+}
+.btn.go:hover { filter: brightness(1.08); }
+.btn.go:disabled { filter: grayscale(.7); cursor: default; }

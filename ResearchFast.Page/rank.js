@@ -86,6 +86,28 @@ var RFPRank = (function () {
     generic:  { name: 'Autre site',  icon: '🛍️', rates: 'rien' }
   };
 
+  /* Adresses de recherche, partagees par le popup ET la page de comparaison,
+     qui peut desormais relancer une recherche elle-meme.
+     Rendre null = la boutique n'existe pas dans ce pays, on la saute. */
+  const SEARCH_URLS = {
+    amazon: (q, r) => 'https://www.amazon.' + (r === 'com' ? 'com' : r) +
+                      '/s?k=' + encodeURIComponent(q),
+
+    ebay: (q, r) => 'https://www.ebay.' + (r === 'com' ? 'com' : r) +
+                    '/sch/i.html?_nkw=' + encodeURIComponent(q),
+
+    /* Chez Best Buy le chemin est TRADUIT : /fr-ca/chercher, pas
+       /fr-ca/search, qui renvoie une 404. Enseigne absente d'Europe. */
+    bestbuy: (q, r) => {
+      const mots = encodeURIComponent(q).replace(/%20/g, '+');
+      if (r === 'com') return 'https://www.bestbuy.com/site/searchpage.jsp?st=' + mots;
+      if (r === 'ca')  return 'https://www.bestbuy.ca/fr-ca/chercher?search=' + mots;
+      return null;
+    },
+
+    facebook: q => 'https://www.facebook.com/marketplace/search/?query=' + encodeURIComponent(q)
+  };
+
   /* rassemble les annonces de tous les sites deja scannes */
   function merge(results) {
     const all = [];
@@ -262,7 +284,8 @@ var RFPRank = (function () {
     return { kind: 'none', text: 'note vendeur indisponible', sub: '' };
   }
 
-  return { rank, weights, qualityOf, ratingLabel, merge, norm, median, SITES_META,
+  return { rank, weights, qualityOf, ratingLabel, merge, norm, median,
+           SITES_META, SEARCH_URLS,
            STOPS, LAST, stopIndex, setupSlider,
            MIN_STOPS, MIN_LAST, minIndex, setupRange, paintRange, clampBounds };
 })();

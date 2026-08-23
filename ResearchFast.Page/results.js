@@ -8,6 +8,7 @@ const DEFAULTS = {
   query: '',
   sites: ['amazon', 'ebay'],
   filters: { minPrice: null, maxPrice: null, minRating: 0, exclude: '', noSponsored: false },
+  region: 'ca',
   results: {}
 };
 
@@ -36,6 +37,9 @@ function render() {
   const r = RFPRank.rank(RFPRank.merge(cfg.results), cfg.query, cfg.filters, budget);
 
   document.getElementById('query').textContent = cfg.query ? '« ' + cfg.query + ' »' : 'Toutes les annonces';
+
+  const champ = document.getElementById('new-query');
+  if (champ !== document.activeElement && champ.value !== cfg.query) champ.value = cfg.query;
   document.getElementById('budget-val').textContent = budget == null ? 'sans limite' : budget.toLocaleString('fr-CA') + ' $';
   document.getElementById('budget-val').className = 'budget-val' + (budget == null ? ' no-limit' : '');
   const slider = document.getElementById('budget');
@@ -181,6 +185,35 @@ document.getElementById('sort').addEventListener('change', e => {
 });
 
 document.getElementById('reload').addEventListener('click', () => load());
+
+/* ---------- relancer une recherche depuis cette page ---------- */
+document.getElementById('relance').addEventListener('submit', e => {
+  e.preventDefault();
+
+  const champ = document.getElementById('new-query');
+  const q = champ.value.trim();
+  if (!q) { champ.focus(); return; }
+
+  /* on repart d'une ardoise propre : les colonnes repassent en attente
+     pendant que les nouveaux onglets se scannent */
+  cfg.query = q;
+  cfg.results = {};
+  chrome.storage.local.set({ query: q, results: {}, searchStamp: Date.now() }, () => {
+    render();
+
+    const absents = [];
+    cfg.sites.forEach(id => {
+      const faire = RFPRank.SEARCH_URLS[id];
+      const url = faire && faire(q, cfg.region);
+      if (url) chrome.tabs.create({ url, active: false });
+      else absents.push((RFPRank.SITES_META[id] || {}).name || id);
+    });
+
+    const info = document.getElementById('mode');
+    info.textContent = 'Recherche de « ' + q + ' » en cours…' +
+      (absents.length ? ' (' + absents.join(', ') + ' : pas dans ce pays)' : '');
+  });
+});
 
 /* les onglets de recherche remplissent le stockage au fil de l'eau */
 chrome.storage.onChanged.addListener(ch => {

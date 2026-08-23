@@ -117,6 +117,10 @@ function priceFromText(t) {
   return m ? parsePrice(m[1] || m[2]) : null;
 }
 
+/* Textes qui ne sont pas des noms de produit : pastilles de coloris et
+   liens de notation, qui pointent pourtant vers la meme fiche. */
+const PARASITE = /^(couleur|colour|color|capacit|taille|size|modele|mod[eè]le)\s*:|étoiles?\s+sur\s+5|stars?\s+out\s+of\s+5|^\d+\s*(commentaire|avis|review)/i;
+
 /* eBay colle des mentions d accessibilite a la fin des titres */
 function cleanTitle(t) {
   return String(t || '')
@@ -232,7 +236,14 @@ const SITES = [
          En francais c'est /produit/, en anglais /product/. */
       document.querySelectorAll('a[href*="/product/"], a[href*="/produit/"]').forEach(link => {
         const url = link.href;
-        if (!url || seen.has(url)) return;
+        if (!url) return;
+
+        /* Une fiche est referencee par plusieurs liens : l'image, le titre, la
+           note, et une pastille par coloris. On dedoublonne sur l'identifiant
+           numerique de la fiche plutot que sur l'adresse complete, sinon le
+           meme telephone revient six fois sous des titres comme "Couleur: Lilas". */
+        const id = (url.match(/(\d{6,})/) || [])[1] || url;
+        if (seen.has(id)) return;
 
         /* On remonte jusqu'au premier ancetre qui contient un montant : c'est
            la vignette. Se fier a la longueur du texte ne marchait pas — le
@@ -245,12 +256,15 @@ const SITES = [
           depth++;
         }
 
-        const title = cleanTitle(
-          txt(link).length > 7 ? txt(link)
-          : (link.getAttribute('aria-label') ||
-             txt(first(card, ['[data-automation*="Name"]', 'h3', 'h4'])) || txt(link)));
-        if (!title || title.length < 5) return;
-        seen.add(url);
+        /* Le vrai titre est celui du lien produit. Les autres liens de la
+           vignette portent un texte parasite : on prend alors celui de la carte. */
+        let title = cleanTitle(txt(link));
+        if (!title || PARASITE.test(title) || title.length < 8) {
+          title = cleanTitle(link.getAttribute('aria-label') ||
+                             txt(first(card, ['[data-automation*="Name"]', 'h3', 'h4'])) || '');
+        }
+        if (!title || title.length < 5 || PARASITE.test(title)) return;
+        seen.add(id);
 
         /* d'abord l'element de prix, puis a defaut le texte entier de la
            carte : le montant y est reconstitue meme s'il est decoupe en

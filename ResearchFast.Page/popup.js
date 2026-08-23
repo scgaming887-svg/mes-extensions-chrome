@@ -12,34 +12,15 @@ const DEFAULTS = {
 };
 
 /* adresses de recherche par site et par pays */
-const SEARCH = {
-  amazon: {
-    name: 'Amazon', icon: '📦',
-    url: (q, r) => 'https://www.amazon.' + (r === 'com' ? 'com' : r) + '/s?k=' + encodeURIComponent(q)
-  },
-  ebay: {
-    name: 'eBay', icon: '🏷️',
-    url: (q, r) => 'https://www.ebay.' + (r === 'com' ? 'com' : r) + '/sch/i.html?_nkw=' + encodeURIComponent(q)
-  },
-  bestbuy: {
-    name: 'Best Buy', icon: '🟨',
-    /* Attention : chez Best Buy le chemin est TRADUIT. En francais c'est
-       /fr-ca/chercher, pas /fr-ca/search — ce dernier renvoie une 404.
-       Si l'adresse changeait encore, le script sait se rattraper en tapant
-       dans leur propre champ de recherche.
-       L'enseigne n'existe qu'au Canada et aux Etats-Unis. */
-    url: (q, r) => {
-      const mots = encodeURIComponent(q).replace(/%20/g, '+');
-      if (r === 'com') return 'https://www.bestbuy.com/site/searchpage.jsp?st=' + mots;
-      if (r === 'ca')  return 'https://www.bestbuy.ca/fr-ca/chercher?search=' + mots;
-      return null;
-    }
-  },
-  facebook: {
-    name: 'Marketplace', icon: '🛒',
-    url: q => 'https://www.facebook.com/marketplace/search/?query=' + encodeURIComponent(q)
-  }
-};
+/* Les boutiques et leurs adresses de recherche vivent dans rank.js :
+   le popup ET la page de comparaison lancent des recherches, il ne doit y
+   avoir qu'une seule definition a corriger le jour ou une adresse change. */
+const SITES = ['amazon', 'ebay', 'bestbuy', 'facebook'];
+const SEARCH = {};
+SITES.forEach(id => {
+  const meta = RFPRank.SITES_META[id];
+  SEARCH[id] = { name: meta.name, icon: meta.icon, url: RFPRank.SEARCH_URLS[id] };
+});
 
 /* paliers du curseur : definis une seule fois dans rank.js */
 const STOPS = RFPRank.STOPS, LAST = RFPRank.LAST, stopIndex = RFPRank.stopIndex;
