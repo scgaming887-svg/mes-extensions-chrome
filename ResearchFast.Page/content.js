@@ -405,6 +405,7 @@ const STOPS = RFPRank.STOPS, LAST = RFPRank.LAST, stopIndex = RFPRank.stopIndex;
 
 let panel = null, panelMode = null;
 let secoursTente = false;   /* une seule tentative de rattrapage par page */
+let reprises = 0;           /* relectures quand la page se remplit encore */
 let state = { raw: [], all: [], query: '', sort: 'score', budget: null, filters: {}, mode: null };
 
 /* Reclasse tout : la ponderation depend du budget, donc bouger le
@@ -708,6 +709,14 @@ function run(silent) {
 
     buildPanel();
     renderList();
+
+    /* Beaucoup de boutiques affichent leurs vignettes en JavaScript, apres le
+       chargement. Si la recolte est maigre, on relit la page un peu plus tard :
+       deux reprises suffisent, et chacune remplace la precedente. */
+    if (state.raw.length < 5 && reprises < 2) {
+      reprises++;
+      setTimeout(() => run(true), 3500 * reprises);
+    }
 
     /* Rien trouve et on n'est pas sur une page de resultats (404, accueil,
        adresse changee de leur cote) : on se rattrape en tapant dans leur

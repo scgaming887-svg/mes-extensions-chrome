@@ -183,9 +183,18 @@ var RFPRank = (function () {
     });
 
     if (words.length) {
-      kept = kept.filter(it => it.match > 0);
-      const strict = kept.filter(it => it.match >= 0.5);
-      if (strict.length >= 3) kept = strict;
+      const avecMot = kept.filter(it => it.match > 0);
+
+      /* On n'ecarte les annonces sans les mots cherches que si une bonne
+         partie du lot les contient. Sinon c'est que la boutique nomme ses
+         produits autrement — chercher "telephone" sur Amazon remonte des
+         "Samsung Galaxy A17 5G", ou le mot n'apparait jamais. Le site a
+         deja fait le tri : le refaire viderait la liste. */
+      if (avecMot.length >= Math.max(3, kept.length * 0.4)) {
+        kept = avecMot;
+        const strict = kept.filter(it => it.match >= 0.5);
+        if (strict.length >= 3) kept = strict;
+      }
     }
 
     /* ---- notation ---- */

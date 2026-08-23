@@ -82,7 +82,7 @@ Un compagnon animé qui vit en bas de tes pages.
 <td><img src="ResearchFast.Page/icons/icon128.png" width="64"></td>
 <td>
 
-### ResearchFast.Page · v1.4.4
+### ResearchFast.Page · v1.5.0
 [⬇️ Télécharger](https://scgaming887-svg.github.io/mes-extensions-chrome/downloads/ResearchFast.Page.zip)
 
 Trouve la meilleure offre pour ce que tu cherches.
@@ -93,7 +93,8 @@ Trouve la meilleure offre pour ce que tu cherches.
 - **Deux curseurs de prix** — un minimum et un budget maximum, jusqu'à 100 000 $ — avec refiltrage instantané sans rescanner. Ils ne peuvent pas se croiser : celui qu'on ne bouge pas cède
 - **Le classement s'adapte à ton budget** (voir plus bas)
 - **La note veut dire ce qu'elle dit** : Amazon note le produit, eBay note le **vendeur**, Marketplace ne publie rien
-- Écarte les accessoires : chercher « casque bluetooth » ne remonte pas les étuis pour casque
+- Écarte les accessoires : chercher « casque bluetooth » ne remonte pas les étuis pour casque — mais si la boutique nomme ses produits autrement (« Galaxy A17 » pour un téléphone), rien n'est écarté : le site a déjà fait le tri
+- **Relit la page toute seule** si elle se remplit après coup, comme le font les boutiques qui affichent leurs vignettes en JavaScript
 - Filtres : prix minimum, note minimale, mots à exclure, masquer les sponsorisés
 - Mode générique de secours sur les autres boutiques
 - Quand une liste est vide, le panneau **dit pourquoi** : page non reconnue, aucune annonce ne correspond à la recherche, ou tout dépasse le budget
