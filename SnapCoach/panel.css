@@ -1,0 +1,122 @@
+/* SnapCoach - panneau injecte dans web.snapchat.com.
+   Tout est prefixe .snapcoach / .sc- : la page hote a ses propres styles
+   et on ne veut en toucher aucun. */
+
+.snapcoach {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  width: 340px;
+  max-height: calc(100vh - 24px);
+  display: flex;
+  flex-direction: column;
+  z-index: 2147483000;
+  background: #14161c;
+  color: #e8ebf2;
+  border: 1px solid #2a2f3d;
+  border-radius: 14px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, .5);
+  font: 13px/1.45 -apple-system, "Segoe UI", Roboto, system-ui, sans-serif;
+  overflow: hidden;
+}
+
+.sc-tete {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: linear-gradient(100deg, #1d2029, #171a22);
+  border-bottom: 1px solid #2a2f3d;
+  flex: none;
+}
+.sc-logo { font-size: 15px; }
+.sc-titre { font-weight: 700; letter-spacing: .2px; flex: 1; }
+.sc-x {
+  background: none; border: none; color: #8b93a7; cursor: pointer;
+  font-size: 15px; line-height: 1; padding: 2px 6px; border-radius: 6px;
+}
+.sc-x:hover { background: #262b38; color: #e8ebf2; }
+
+.sc-corps { padding: 12px; overflow-y: auto; flex: 1; }
+.sc-corps.sc-attente { opacity: .6; }
+.snapcoach.sc-replie .sc-corps,
+.snapcoach.sc-replie .sc-pied { display: none; }
+
+.sc-pied { padding: 10px 12px; border-top: 1px solid #2a2f3d; flex: none; }
+.sc-go {
+  width: 100%; padding: 9px 12px; border: none; border-radius: 9px;
+  background: linear-gradient(100deg, #fffc00, #ffd21e);
+  color: #1a1a00; font: inherit; font-weight: 700; cursor: pointer;
+}
+.sc-go:hover { filter: brightness(1.05); }
+.sc-go-inline { margin-top: 8px; }
+
+.sc-etat {
+  font-size: 11.5px; color: #8b93a7; margin-bottom: 10px;
+  padding-bottom: 8px; border-bottom: 1px solid #23283442;
+}
+.sc-vide, .sc-err { color: #8b93a7; font-size: 12.5px; }
+.sc-err { color: #ff8b8b; margin-top: 8px; }
+
+/* --- jauge --- */
+.sc-jauge { text-align: center; margin-bottom: 10px; }
+.sc-score { font-size: 34px; font-weight: 800; line-height: 1; }
+.sc-barre {
+  height: 5px; background: #262b38; border-radius: 4px;
+  overflow: hidden; margin: 8px 0 5px;
+}
+.sc-plein { height: 100%; border-radius: 4px; }
+.sc-souslabel { font-size: 11px; color: #8b93a7; }
+
+.sc-vert   { color: #43d787; } .sc-plein.sc-vert   { background: #43d787; }
+.sc-jaune  { color: #ffd21e; } .sc-plein.sc-jaune  { background: #ffd21e; }
+.sc-orange { color: #ff9f43; } .sc-plein.sc-orange { background: #ff9f43; }
+.sc-rouge  { color: #ff6b6b; } .sc-plein.sc-rouge  { background: #ff6b6b; }
+.sc-gris   { color: #6a7288; }
+
+.sc-resume {
+  margin: 0 0 12px; padding: 9px 10px; background: #1b1f28;
+  border-radius: 9px; font-size: 12.5px;
+}
+
+/* --- sections --- */
+.sc-sec { margin-bottom: 13px; }
+.sc-sec h4 {
+  margin: 0 0 6px; font-size: 11px; text-transform: uppercase;
+  letter-spacing: .6px; color: #8b93a7; font-weight: 700;
+}
+.sc-signaux { margin: 0; padding-left: 16px; }
+.sc-signaux li { margin-bottom: 3px; font-size: 12.5px; }
+
+/* --- reponses --- */
+.sc-rep {
+  background: #1b1f28; border: 1px solid #262b38;
+  border-radius: 9px; padding: 9px 10px; margin-bottom: 7px;
+}
+.sc-rep-haut { display: flex; gap: 8px; align-items: flex-start; }
+.sc-rep-txt { flex: 1; font-size: 12.5px; }
+.sc-rep-pq { font-size: 11.5px; color: #8b93a7; margin-top: 5px; }
+.sc-copie {
+  flex: none; background: #262b38; border: none; color: #b9c0d0;
+  font: inherit; font-size: 11px; padding: 3px 8px;
+  border-radius: 6px; cursor: pointer;
+}
+.sc-copie:hover { background: #313747; color: #fff; }
+
+/* --- alertes --- */
+.sc-alerte {
+  border-left: 2px solid #ff9f43; padding: 2px 0 2px 9px; margin-bottom: 8px;
+}
+.sc-alerte-t { font-weight: 600; font-size: 12.5px; }
+.sc-alerte-q { font-size: 11.5px; color: #8b93a7; margin-top: 2px; }
+
+.sc-moment { margin: 0; font-size: 12.5px; }
+
+/* --- coller a la main --- */
+.sc-zone {
+  width: 100%; min-height: 120px; margin-top: 8px; padding: 8px;
+  background: #0f1116; color: #e8ebf2; border: 1px solid #2a2f3d;
+  border-radius: 8px; font: inherit; font-size: 12px; resize: vertical;
+  box-sizing: border-box;
+}
+.sc-zone:focus { outline: none; border-color: #ffd21e; }

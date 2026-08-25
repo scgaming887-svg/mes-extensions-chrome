@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <header>
+    <span class="logo">💬</span>
+    <div>
+      <h1>SnapCoach</h1>
+      <p class="sous">Retour sur tes conversations Snapchat</p>
+    </div>
+  </header>
+
+  <main>
+    <label class="ligne">
+      <input type="checkbox" id="actif" checked>
+      <span>Afficher le panneau sur web.snapchat.com</span>
+    </label>
+
+    <button id="analyser" class="go">Analyser l'onglet Snapchat ouvert</button>
+
+    <div class="bloc">
+      <h2>Connexion à Claude <span class="badge" id="etat-cle">hors ligne</span></h2>
+      <p class="aide">
+        Sans clé, l'extension marche seule et <b>rien ne quitte ton ordinateur</b>.
+        Avec une clé, la conversation est envoyée à l'API d'Anthropic pour obtenir
+        un avis plus fin et de vraies réponses rédigées.
+      </p>
+
+      <label class="champ">
+        <span>Clé API</span>
+        <input type="password" id="cle" placeholder="sk-ant-…" autocomplete="off" spellcheck="false">
+      </label>
+      <p class="aide petit">
+        À créer sur <b>console.anthropic.com</b>. Payante à l'usage, quelques centimes
+        par analyse. Elle est stockée en clair dans ce navigateur : ne l'utilise pas
+        sur un ordinateur partagé, et supprime-la depuis la console si tu la perds.
+      </p>
+
+      <label class="champ">
+        <span>Modèle</span>
+        <select id="modele">
+          <option value="claude-opus-5">Opus 5 — le plus fin (défaut)</option>
+          <option value="claude-sonnet-5">Sonnet 5 — bon compromis</option>
+          <option value="claude-haiku-4-5">Haiku 4.5 — le moins cher</option>
+        </select>
+      </label>
+
+      <label class="champ">
+        <span>Ton des réponses proposées</span>
+        <select id="ton">
+          <option value="">Comme dans la conversation</option>
+          <option value="naturel et decontracte">Naturel, décontracté</option>
+          <option value="drole, avec de l humour leger">Drôle</option>
+          <option value="direct et assume, sans lourdeur">Direct</option>
+          <option value="doux et attentionne">Doux</option>
+        </select>
+      </label>
+    </div>
+
+    <p class="note" id="note"></p>
+  </main>
+
+  <script src="popup.js"></script>
+</body>
+</html>

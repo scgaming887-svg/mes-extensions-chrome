@@ -107,6 +107,26 @@ Trouve la meilleure offre pour ce que tu cherches.
 
 ---
 
+### SnapCoach · v1.0.0
+[⬇️ Télécharger](https://scgaming887-svg.github.io/mes-extensions-chrome/downloads/SnapCoach.zip)
+
+Un retour honnête sur tes conversations Snapchat, dans un panneau à côté du fil.
+
+- **Niveau d'intérêt sur 100**, avec les faits qui l'expliquent : qui écrit le plus, qui pose des questions, qui relance, délais de réponse
+- **Réponses possibles**, à copier d'un clic
+- **Ce qu'il ne faut pas faire** : tu écris beaucoup plus qu'elle, tu relances sans attendre, tu poses toutes les questions, le sujet n'accroche pas
+- **Le bon moment** : répondre maintenant, laisser respirer, ou ne rien envoyer du tout — c'est souvent le meilleur conseil
+- **Ne flatte pas.** Quand c'est mal engagé, l'extension le dit. Un score gonflé ne sert à rien
+- **Marche entièrement hors ligne.** Sans clé API, aucune conversation ne quitte ton ordinateur
+- **Avec une clé Claude** (facultative, à créer sur console.anthropic.com) : analyse plus fine et vraies réponses rédigées, dans le ton de la conversation
+
+⚠️ **Uniquement sur [web.snapchat.com](https://web.snapchat.com)** — une extension Chrome ne peut pas voir l'application de ton téléphone.
+Si le panneau n'arrive pas à lire la page, tu peux coller la conversation à la main.
+
+🔑 **La clé API est stockée en clair dans le navigateur.** Ne l'utilise pas sur un ordinateur partagé, et révoque-la depuis la console si tu la perds.
+
+---
+
 ## Installation
 
 Va sur la **[page de téléchargement](https://scgaming887-svg.github.io/mes-extensions-chrome/)**, prends le `.zip` qui t'intéresse, puis :
@@ -124,7 +144,7 @@ Va sur la **[page de téléchargement](https://scgaming887-svg.github.io/mes-ext
 git clone https://github.com/scgaming887-svg/mes-extensions-chrome.git
 ```
 
-Puis charge directement les dossiers `GameOpen/`, `PageCustomer/`, `PetPage/` ou `ResearchFast.Page/`.
+Puis charge directement les dossiers `GameOpen/`, `PageCustomer/`, `PetPage/`, `ResearchFast.Page/` ou `SnapCoach/`.
 Après chaque modification : bouton ↻ sur `chrome://extensions`, et recharge l'onglet
 pour les trois extensions qui s'injectent dans les pages.
 

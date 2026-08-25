@@ -1,0 +1,51 @@
+* { box-sizing: border-box; }
+body {
+  width: 330px; margin: 0; padding: 0;
+  background: #14161c; color: #e8ebf2;
+  font: 13px/1.45 -apple-system, "Segoe UI", Roboto, system-ui, sans-serif;
+}
+header {
+  display: flex; align-items: center; gap: 9px; padding: 12px 14px;
+  background: linear-gradient(100deg, #1d2029, #171a22);
+  border-bottom: 1px solid #2a2f3d;
+}
+.logo { font-size: 20px; }
+h1 { margin: 0; font-size: 15px; letter-spacing: .2px; }
+.sous { margin: 1px 0 0; font-size: 11.5px; color: #8b93a7; }
+main { padding: 12px 14px 14px; }
+.ligne { display: flex; align-items: center; gap: 8px; cursor: pointer; margin-bottom: 10px; }
+.ligne input { accent-color: #ffd21e; }
+.go {
+  width: 100%; padding: 9px; border: none; border-radius: 9px;
+  background: linear-gradient(100deg, #fffc00, #ffd21e);
+  color: #1a1a00; font: inherit; font-weight: 700; cursor: pointer;
+}
+.go:hover { filter: brightness(1.05); }
+.go:disabled { filter: grayscale(.7); cursor: default; }
+.bloc { margin-top: 14px; padding-top: 12px; border-top: 1px solid #2a2f3d; }
+h2 {
+  margin: 0 0 6px; font-size: 11px; text-transform: uppercase;
+  letter-spacing: .6px; color: #8b93a7; font-weight: 700;
+  display: flex; align-items: center; gap: 7px;
+}
+.badge {
+  font-size: 9.5px; padding: 2px 6px; border-radius: 20px;
+  background: #262b38; color: #8b93a7; letter-spacing: .3px;
+  text-transform: none; font-weight: 600;
+}
+.badge.on { background: #1c3a2a; color: #43d787; }
+.aide { margin: 0 0 9px; font-size: 11.5px; color: #8b93a7; }
+.aide b { color: #b9c0d0; }
+.aide.petit { font-size: 11px; margin-top: -3px; }
+.champ { display: block; margin-bottom: 9px; }
+.champ span {
+  display: block; font-size: 11px; color: #8b93a7;
+  margin-bottom: 3px; letter-spacing: .2px;
+}
+.champ input, .champ select {
+  width: 100%; padding: 7px 9px; background: #0f1116; color: #e8ebf2;
+  border: 1px solid #2a2f3d; border-radius: 8px; font: inherit; font-size: 12.5px;
+}
+.champ input:focus, .champ select:focus { outline: none; border-color: #ffd21e; }
+.note { margin: 10px 0 0; font-size: 11.5px; color: #43d787; min-height: 15px; }
+.note.err { color: #ff8b8b; }
