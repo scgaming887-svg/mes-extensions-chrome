@@ -107,7 +107,7 @@ Trouve la meilleure offre pour ce que tu cherches.
 
 ---
 
-### SnapCoach · v1.0.0
+### SnapCoach · v1.1.0
 [⬇️ Télécharger](https://scgaming887-svg.github.io/mes-extensions-chrome/downloads/SnapCoach.zip)
 
 Un retour honnête sur tes conversations Snapchat, dans un panneau à côté du fil.
@@ -119,6 +119,8 @@ Un retour honnête sur tes conversations Snapchat, dans un panneau à côté du 
 - **Ne flatte pas.** Quand c'est mal engagé, l'extension le dit. Un score gonflé ne sert à rien
 - **Marche entièrement hors ligne.** Sans clé API, aucune conversation ne quitte ton ordinateur
 - **Avec une clé Claude** (facultative, à créer sur console.anthropic.com) : analyse plus fine et vraies réponses rédigées, dans le ton de la conversation
+
+- **Les clics restent dans le panneau** : Snapchat referme la conversation dès qu'on clique ailleurs, donc les événements du panneau sont arrêtés avant de l'atteindre. Et si le fil se ferme quand même, la dernière lecture reste analysable
 
 ⚠️ **Uniquement sur [web.snapchat.com](https://web.snapchat.com)** — une extension Chrome ne peut pas voir l'application de ton téléphone.
 Si le panneau n'arrive pas à lire la page, tu peux coller la conversation à la main.

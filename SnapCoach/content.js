@@ -100,7 +100,40 @@ function construire() {
   pied.appendChild(bouton);
   panneau.appendChild(pied);
 
+  /* Snapchat referme la conversation des qu'on clique ailleurs dans la page.
+     Le panneau EST dans la page : sans cela, cliquer sur « Analyser » fermait
+     le fil qu'on voulait justement analyser. On arrete donc les evenements a
+     la frontiere du panneau, apres nos propres boutons : ils remontent
+     normalement jusqu'ici, puis ne vont pas plus loin. */
+  ['pointerdown', 'pointerup', 'mousedown', 'mouseup', 'click', 'dblclick',
+   'touchstart', 'touchend', 'focusin', 'keydown', 'keyup'].forEach(t => {
+    panneau.addEventListener(t, e => e.stopPropagation());
+  });
+
   document.body.appendChild(panneau);
+}
+
+/* ============================================================
+   Memoire de la conversation
+   Meme protege, le fil peut se fermer pour d'autres raisons : onglet
+   endormi, session expiree, navigation dans l'application. On garde donc
+   en permanence la derniere lecture valable, et l'analyse repart de
+   celle-la si la page est devenue vide entre-temps.
+   ============================================================ */
+let dernierLot = null, dernierQuand = 0, minuteur = null;
+
+function memoriser() {
+  const lus = bulles();
+  if (lus.length >= 2) { dernierLot = lus; dernierQuand = Date.now(); }
+}
+
+function surveiller() {
+  memoriser();
+  const obs = new MutationObserver(() => {
+    clearTimeout(minuteur);
+    minuteur = setTimeout(memoriser, 700);
+  });
+  obs.observe(document.body, { childList: true, subtree: true, characterData: true });
 }
 
 function jauge(score) {
@@ -242,40 +275,52 @@ function coller() {
   corpsPanneau.appendChild(go);
 }
 
-function lancer(msgs) {
+const note = (repli, etat) => repli ? repli + ' ' + etat : etat;
+
+function lancer(msgs, avis) {
   const local = SnapCoach.analyse(msgs, Date.now());
   const texte = texteConversation(msgs);
 
   chrome.storage.local.get(CLES, cfg => {
     if (!cfg.cle) {
-      afficher(local, null, 'Analyse locale — ajoute une clé API dans les réglages pour un avis de Claude.');
+      afficher(local, null, note(avis, 'Analyse locale — ajoute une clé API dans les réglages pour un avis de Claude.'));
       return;
     }
 
-    afficher(local, null, 'Analyse locale affichée. Claude réfléchit…');
+    afficher(local, null, note(avis, 'Analyse locale affichée. Claude réfléchit…'));
     corpsPanneau.classList.add('sc-attente');
 
     chrome.runtime.sendMessage({ type: 'coach', conversation: texte }, rep => {
       corpsPanneau.classList.remove('sc-attente');
       if (chrome.runtime.lastError) {
-        afficher(local, null, 'Analyse locale — extension à recharger.');
+        afficher(local, null, note(avis, 'Analyse locale — extension à recharger.'));
         return;
       }
       if (!rep || rep.erreur) {
-        afficher(local, null, 'Analyse locale — ' + ((rep && rep.message) || 'Claude indisponible.'));
+        afficher(local, null, note(avis, 'Analyse locale — ' + ((rep && rep.message) || 'Claude indisponible.')));
         return;
       }
-      afficher(local, rep.avis, 'Analysé par ' + (rep.modele || 'Claude') + '.');
+      afficher(local, rep.avis, note(avis, 'Analysé par ' + (rep.modele || 'Claude') + '.'));
     });
   });
 }
 
 function analyser() {
   construire();
-  const msgs = bulles();
+
+  let msgs = bulles();
+  let repli = false;
+
+  /* la page ne montre plus rien : on repart de la derniere lecture gardee */
+  if (msgs.length < 2 && dernierLot && dernierLot.length >= 2) {
+    msgs = dernierLot;
+    repli = true;
+  }
   if (msgs.length < 2) { coller(); return; }
+
   dernierTexte = texteConversation(msgs);
-  lancer(msgs);
+  lancer(msgs, repli ? 'Conversation fermée — analyse de la dernière lecture ('
+                       + SnapCoach.duree(Date.now() - dernierQuand) + ').' : null);
 }
 
 /* ============================================================
@@ -286,6 +331,7 @@ chrome.storage.local.get(CLES, cfg => {
   construire();
   corpsPanneau.appendChild(el('p', 'sc-vide',
     'Ouvre une conversation, puis clique sur « Analyser la conversation ».'));
+  surveiller();
 });
 
 chrome.runtime.onMessage.addListener(msg => {
