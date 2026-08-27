@@ -8,6 +8,7 @@ const DEFAUTS = {
   ambiance: 'thock',
   volume: 0.5,
   variation: 0.12,
+  espace: 1,
   relache: true,
   motsDePasse: false,
   sitesMuets: []
@@ -36,10 +37,11 @@ function ecouter(id) {
   phrase.forEach((t, i) => {
     setTimeout(() => {
       KeySound.frapper(c, maitre, id, KeySound.categorie(t),
-                       { variation: cfg.variation, volume: cfg.volume });
+                       { variation: cfg.variation, volume: cfg.volume, espace: cfg.espace });
       if (cfg.relache) {
         setTimeout(() => KeySound.frapper(c, maitre, id, KeySound.categorie(t),
-                                          { variation: cfg.variation, volume: cfg.volume, relache: true }), 55);
+                                          { variation: cfg.variation, volume: cfg.volume,
+                                            espace: cfg.espace, relache: true }), 55);
       }
     }, i * 115);
   });
@@ -103,6 +105,8 @@ chrome.storage.local.get(DEFAUTS, c => {
   $('v-volume').textContent = Math.round(cfg.volume * 100) + ' %';
   $('variation').value = Math.round(cfg.variation * 100);
   $('v-variation').textContent = Math.round(cfg.variation * 100) + ' %';
+  $('espace').value = Math.round(cfg.espace * 100);
+  $('v-espace').textContent = Math.round(cfg.espace * 100) + ' %';
   $('relache').checked = cfg.relache !== false;
   $('motsDePasse').checked = !!cfg.motsDePasse;
 
@@ -132,6 +136,13 @@ $('variation').addEventListener('input', e => {
   chrome.storage.local.set({ variation: cfg.variation });
 });
 $('variation').addEventListener('change', () => ecouter(cfg.ambiance));
+
+$('espace').addEventListener('input', e => {
+  cfg.espace = Number(e.target.value) / 100;
+  $('v-espace').textContent = e.target.value + ' %';
+  chrome.storage.local.set({ espace: cfg.espace });
+});
+$('espace').addEventListener('change', () => ecouter(cfg.ambiance));
 
 $('relache').addEventListener('change', e => {
   cfg.relache = e.target.checked;

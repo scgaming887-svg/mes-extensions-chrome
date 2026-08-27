@@ -11,6 +11,7 @@ const DEFAUTS = {
   ambiance: 'thock',
   volume: 0.5,
   variation: 0.12,
+  espace: 1,              /* dose de reverberation, 1 = celle de l'ambiance */
   relache: true,          /* jouer aussi le son de remontee */
   motsDePasse: false,     /* rester muet dans les champs de mot de passe */
   sitesMuets: []
@@ -66,6 +67,7 @@ function jouer(nomTouche, cible, relache) {
   const noeuds = KeySound.frapper(c, maitre, cfg.ambiance, cat, {
     variation: cfg.variation,
     volume: cfg.volume,
+    espace: cfg.espace,
     relache: relache
   });
   /* On libere la place peu apres la fin du son. Retenir un emplacement

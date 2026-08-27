@@ -129,13 +129,16 @@ Si le panneau n'arrive pas à lire la page, tu peux coller la conversation à la
 
 ---
 
-### KeySound · v1.0.0
+### KeySound · v1.1.0
 [⬇️ Télécharger](https://scgaming887-svg.github.io/mes-extensions-chrome/downloads/KeySound.zip)
 
 Le son de ton clavier, en mieux — pendant que tu tapes sur le web.
 
-- **8 ambiances** : mécanique clicky, thock profond, crémeux, machine à écrire, bulle, goutte d'eau, bois, rétro 8-bit
+- **10 ambiances** : thock profond, marbre, velours, crémeux, mécanique clicky, bois, pluie, bulle, machine à écrire, rétro 8-bit
 - **Les sons sont synthétisés**, pas enregistrés : l'extension pèse quelques Ko au lieu de plusieurs Mo, et chaque son reste réglable
+- **Quatre couches par frappe** : la matière du contact, le corps grave, une **résonance qui traîne après le contact** — c'est elle qui rend le son agréable plutôt que sec — et un scintillement aigu qui donne la sensation de proximité
+- **Réverbération et stéréo** : chaque frappe tombe à un endroit légèrement différent dans une petite pièce. Curseur « Espace » pour doser, de collé à l'oreille jusqu'à très enveloppant
+- **Attaque réglée par ambiance** : 1,5 ms pour le clicky qui claque, 12 ms pour le velours qui effleure
 - **Espace, Entrée et Retour sonnent différemment** — c'est ce qui fait la différence entre un vrai clavier et un bip répété. La machine à écrire a même son timbre de retour chariot
 - **Variation de hauteur** à chaque frappe : sans elle, l'oreille entend une machine
 - **Son de remontée de touche** en option, pour le réalisme
