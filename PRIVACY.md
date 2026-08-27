@@ -1,4 +1,4 @@
-# Politique de confidentialité — GameOpen, PageCustomer, PetPage, ResearchFast.Page, SnapCoach
+# Politique de confidentialité — GameOpen, PageCustomer, PetPage, ResearchFast.Page, SnapCoach, KeySound
 
 *Dernière mise à jour : 24 août 2026*
 
@@ -25,6 +25,7 @@ et ne sont accessibles ni à l'auteur, ni à un tiers.
 | PageCustomer | Préférences d'apparence, globales et par nom de domaine |
 | PetPage | Animal choisi, nom, taille, vitesse, options, sites désactivés, nombre de repas, records des mini-jeux |
 | ResearchFast.Page | Ta recherche en cours, tes filtres, et les annonces extraites du dernier scan |
+| KeySound | Ton ambiance, ton volume et la liste des sites que tu as coupés. **Aucune frappe n'est enregistrée** |
 | SnapCoach | Ta clé API si tu en ajoutes une, le modèle et le ton choisis. **Aucune conversation n'est enregistrée** : elle est analysée puis oubliée à la fermeture de l'onglet |
 
 ## SnapCoach et la connexion à Claude
@@ -54,6 +55,18 @@ immédiatement en mode hors ligne.
 n'importe quel réglage. Quiconque a accès à ta session Chrome peut donc la lire.
 Ne l'utilise pas sur un ordinateur partagé, et révoque-la depuis
 `console.anthropic.com` si tu penses l'avoir exposée.
+
+## KeySound et tes frappes
+
+KeySound écoute les touches pour jouer un son, ce qui demande d'être explicite :
+il lit le **nom** de la touche uniquement pour choisir entre cinq sons
+(lettre, espace, entrée, retour, modificateur), puis ne le conserve pas.
+
+- **Rien n'est stocké** : aucun journal de frappe, aucun historique, aucun compteur.
+- **Rien n'est envoyé** : l'extension n'émet aucune requête réseau, les sons étant
+  fabriqués dans le navigateur.
+- Une option permet de **rester muet dans les champs de mot de passe**, et une autre
+  de couper le son sur un site précis.
 
 ## Accès aux pages web
 

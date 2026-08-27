@@ -129,6 +129,25 @@ Si le panneau n'arrive pas à lire la page, tu peux coller la conversation à la
 
 ---
 
+### KeySound · v1.0.0
+[⬇️ Télécharger](https://scgaming887-svg.github.io/mes-extensions-chrome/downloads/KeySound.zip)
+
+Le son de ton clavier, en mieux — pendant que tu tapes sur le web.
+
+- **8 ambiances** : mécanique clicky, thock profond, crémeux, machine à écrire, bulle, goutte d'eau, bois, rétro 8-bit
+- **Les sons sont synthétisés**, pas enregistrés : l'extension pèse quelques Ko au lieu de plusieurs Mo, et chaque son reste réglable
+- **Espace, Entrée et Retour sonnent différemment** — c'est ce qui fait la différence entre un vrai clavier et un bip répété. La machine à écrire a même son timbre de retour chariot
+- **Variation de hauteur** à chaque frappe : sans elle, l'oreille entend une machine
+- **Son de remontée de touche** en option, pour le réalisme
+- Volume réglable, coupure par site, et bouton pour tout couper d'un clic
+- **Aucune touche n'est enregistrée** : seule la catégorie (lettre, espace, entrée, retour) est lue pour choisir le son, puis oubliée. Option pour rester muet dans les champs de mot de passe
+
+⚠️ **Uniquement dans le navigateur.** Une extension Chrome n'entend pas ce que tu tapes dans Word, Discord ou un jeu — il faudrait un logiciel Windows pour ça.
+
+⚠️ Le son s'**ajoute** au bruit réel de ton clavier, il ne le remplace pas.
+
+---
+
 ## Installation
 
 Va sur la **[page de téléchargement](https://scgaming887-svg.github.io/mes-extensions-chrome/)**, prends le `.zip` qui t'intéresse, puis :
@@ -146,7 +165,7 @@ Va sur la **[page de téléchargement](https://scgaming887-svg.github.io/mes-ext
 git clone https://github.com/scgaming887-svg/mes-extensions-chrome.git
 ```
 
-Puis charge directement les dossiers `GameOpen/`, `PageCustomer/`, `PetPage/`, `ResearchFast.Page/` ou `SnapCoach/`.
+Puis charge directement les dossiers `GameOpen/`, `PageCustomer/`, `PetPage/`, `ResearchFast.Page/`, `SnapCoach/` ou `KeySound/`.
 Après chaque modification : bouton ↻ sur `chrome://extensions`, et recharge l'onglet
 pour les trois extensions qui s'injectent dans les pages.
 

@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <header>
+    <span class="logo">🎹</span>
+    <div>
+      <h1>KeySound</h1>
+      <p class="sous">Le son de tes touches, dans le navigateur</p>
+    </div>
+    <label class="bascule" title="Activer / couper">
+      <input type="checkbox" id="actif" checked>
+      <span class="piste"></span>
+    </label>
+  </header>
+
+  <main>
+    <p class="aide">Clique sur une ambiance pour l'écouter. Celle qui est choisie s'applique tout de suite.</p>
+    <div class="grille" id="grille"></div>
+
+    <div class="reglage">
+      <div class="lbl"><span>Volume</span><b id="v-volume">50 %</b></div>
+      <input type="range" id="volume" min="0" max="100" step="5" value="50">
+    </div>
+
+    <div class="reglage">
+      <div class="lbl"><span>Variation</span><b id="v-variation">12 %</b></div>
+      <input type="range" id="variation" min="0" max="35" step="1" value="12">
+      <p class="mini">Décale un peu la hauteur à chaque frappe. À zéro, toutes les touches sonnent identiques et ça s'entend.</p>
+    </div>
+
+    <label class="ligne">
+      <input type="checkbox" id="relache" checked>
+      <span>Jouer aussi le son de remontée de la touche</span>
+    </label>
+
+    <label class="ligne">
+      <input type="checkbox" id="motsDePasse">
+      <span>Rester muet dans les champs de mot de passe</span>
+    </label>
+
+    <div class="site">
+      <button id="muet-site" class="secondaire">Couper sur ce site</button>
+      <p class="mini" id="etat-site"></p>
+    </div>
+
+    <p class="note" id="note"></p>
+  </main>
+
+  <script src="sons.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>
