@@ -304,6 +304,75 @@ const SITES = [
     }
   },
 
+  /* ---------------- Newegg ---------------- */
+  {
+    id: 'newegg', name: 'Newegg', delay: 1500,
+    test: h => /(^|\.)newegg\./.test(h),
+    parse() {
+      const out = [];
+      const seen = new Set();
+
+      /* une vignette = .item-cell, mais Newegg renomme ses classes assez
+         souvent : on part plutot des liens de fiche produit (toujours
+         "/p/" dans l'adresse), comme pour Best Buy. */
+      document.querySelectorAll(
+        '.item-cell, a.item-title, a[href*="/p/N82E"], a[href*="/p/"]'
+      ).forEach(node => {
+        const card = node.classList && node.classList.contains('item-cell')
+          ? node : (node.closest ? node.closest('.item-cell') : null);
+        if (!card) return;
+
+        const link = first(card, ['a.item-title', 'a.item-img', 'a[href*="/p/"]']);
+        const url = link ? link.href : '';
+        if (!url) return;
+
+        /* identifiant de fiche plutot que l'adresse complete : certains liens
+           de la meme vignette (image, titre, avis) ne partagent pas tout a
+           fait la meme URL (ancre #tab-reviews, parametres de tri...) */
+        const id = (url.match(/\/p\/([A-Za-z0-9]+)/) || [])[1] || url;
+        if (seen.has(id)) return;
+
+        const title = cleanTitle(txt(first(card, ['a.item-title', '[class*="item-title"]'])));
+        if (!title || title.length < 5) return;
+        seen.add(id);
+
+        const price = parsePrice(txt(first(card,
+          ['li.price-current', '.price-current', '[class*="price-current"]'])));
+
+        const img = card.querySelector('img');
+
+        /* "i.rating.rating-45" -> 4,5 etoiles ; "rating-5" -> 5 etoiles.
+           Plusieurs elements de la vignette contiennent "rating-" dans leur
+           classe (le compteur d'avis par ex.) sans porter le chiffre : on
+           cherche celui qui a vraiment un nombre apres le tiret. */
+        let rating = null;
+        const etoiles = card.querySelectorAll('[class*="rating-"]');
+        for (let i = 0; i < etoiles.length; i++) {
+          const m = (etoiles[i].className || '').match(/\brating-(\d{1,2})\b/);
+          if (!m) continue;
+          const n = Number(m[1]);
+          rating = n > 5 ? n / 10 : n;
+          break;
+        }
+
+        const revEl = first(card, ['.item-rating-num', '[class*="rating-num"]']);
+        const reviews = revEl ? parsePrice(txt(revEl).replace(/[()]/g, '')) : null;
+
+        const sponsored = /sponsoris|sponsored/i.test(txt(card).slice(0, 220));
+
+        out.push({
+          title, price, url,
+          img: img ? (img.src || img.getAttribute('data-src') || '') : '',
+          rating: rating != null && rating <= 5 ? rating : null,
+          reviews: reviews || null,
+          ratingKind: 'product',
+          note: sponsored ? 'sponsorisé' : ''
+        });
+      });
+      return out;
+    }
+  },
+
   /* ---------------- Facebook Marketplace ---------------- */
   {
     id: 'facebook', name: 'Marketplace', delay: 2600,
@@ -367,17 +436,24 @@ const SITES = [
       const RE = /(?:\$|€|£|CAD|USD)\s*\d|\d[\d\s.,]*\s*(?:\$|€|£)/;
 
       /* on cherche les petits blocs de texte qui ressemblent a un prix,
-         puis on remonte jusqu'a la carte produit qui les contient */
-      document.querySelectorAll('span, div, p, strong, b').forEach(node => {
+         puis on remonte jusqu'a la carte produit qui les contient.
+         Plafond de noeuds visites : certaines pages (fils infinis, grosses
+         grilles) en comptent des dizaines de milliers, et parcourir tout
+         le DOM a chaque rescan les faisait raguer pour rien. 120 annonces
+         suffisent largement a l'affichage, pas la peine de lire le reste. */
+      const noeuds = document.querySelectorAll('span, div, p, strong, b');
+      const plafond = Math.min(noeuds.length, 6000);
+      for (let i = 0; i < plafond && out.length < 120; i++) {
+        const node = noeuds[i];
         /* On accepte les petits conteneurs, pas seulement les feuilles :
            un prix est souvent decoupe ("185," + <sup>49</sup> + " $"), et
            n'apparait entier que sur l'element qui les regroupe. */
-        if (node.children.length > 3) return;
+        if (node.children.length > 3) continue;
         const t = txt(node);
-        if (t.length > 30 || !RE.test(t)) return;
+        if (t.length > 30 || !RE.test(t)) continue;
 
         const price = parsePrice(t);
-        if (!price) return;
+        if (!price) continue;
 
         let card = node, link = null, depth = 0;
         while (card && depth < 7) {
@@ -386,14 +462,14 @@ const SITES = [
           card = card.parentElement;
           depth++;
         }
-        if (!card || !link) return;
+        if (!card || !link) continue;
 
         const url = link.href;
-        if (!url || seen.has(url)) return;
+        if (!url || seen.has(url)) continue;
         seen.add(url);
 
         const title = (txt(link) || txt(card)).replace(t, '').trim().slice(0, 140);
-        if (title.length < 6) return;
+        if (title.length < 6) continue;
 
         const img = card.querySelector('img');
         out.push({
@@ -401,8 +477,8 @@ const SITES = [
           img: img ? img.src : '',
           rating: null, reviews: null, ratingKind: 'none', note: ''
         });
-      });
-      return out.slice(0, 120);
+      }
+      return out;
     }
   }
 ];
@@ -707,15 +783,22 @@ function run(silent) {
     state.raw = raw;
     rescore();
 
-    /* on enregistre la liste complete, pas celle filtree par le budget :
-       le curseur du popup doit pouvoir la reparcourir sans rescanner. */
+    /* On enregistre les annonces BRUTES (state.raw), pas state.all. state.all
+       est deja passe par rank() : mots exclus, note minimale, sponsorises
+       masques. Si on stockait ca, remonter la note minimale ou retirer un mot
+       exclu plus tard dans le popup ne ferait rien reapparaitre - ces
+       annonces auraient deja disparu du stockage pour de bon. Le popup et
+       la page de comparaison appliquent deja rank() eux-memes sur les
+       resultats fusionnes : c'est a eux de filtrer, pas au scan de decider
+       une fois pour toutes. Le budget, lui, n'a jamais pose ce probleme :
+       il ne filtre qu'a l'affichage. */
     const results = cfg.results || {};
     results[SITE.id] = {
       site: SITE.name,
       url: location.href,
       stamp: cfg.searchStamp,   /* quelle recherche a produit ces resultats */
       when: Date.now(),
-      items: state.all.slice(0, 40)
+      items: state.raw.slice(0, 80)
     };
     /* On enregistre TOUJOURS, meme une liste vide : sinon la colonne de la
        page de comparaison reste indefiniment sur "scan en cours". */

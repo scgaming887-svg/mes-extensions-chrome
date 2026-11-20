@@ -82,6 +82,7 @@ var RFPRank = (function () {
     amazon:   { name: 'Amazon',      icon: '📦', rates: 'le produit' },
     ebay:     { name: 'eBay',        icon: '🏷️', rates: 'le vendeur' },
     bestbuy:  { name: 'Best Buy',    icon: '🟨', rates: 'le produit' },
+    newegg:   { name: 'Newegg',      icon: '🥚', rates: 'le produit' },
     facebook: { name: 'Marketplace', icon: '🛒', rates: 'rien' },
     generic:  { name: 'Autre site',  icon: '🛍️', rates: 'rien' }
   };
@@ -102,6 +103,13 @@ var RFPRank = (function () {
       const mots = encodeURIComponent(q).replace(/%20/g, '+');
       if (r === 'com') return 'https://www.bestbuy.com/site/searchpage.jsp?st=' + mots;
       if (r === 'ca')  return 'https://www.bestbuy.ca/fr-ca/chercher?search=' + mots;
+      return null;
+    },
+
+    /* Newegg.ca existe, Newegg n'a pas de version francaise ni europeenne */
+    newegg: (q, r) => {
+      if (r === 'ca') return 'https://www.newegg.ca/p/pl?d=' + encodeURIComponent(q);
+      if (r === 'com' || r === 'fr') return r === 'fr' ? null : 'https://www.newegg.com/p/pl?d=' + encodeURIComponent(q);
       return null;
     },
 

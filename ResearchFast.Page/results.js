@@ -21,6 +21,10 @@ const money = v => v == null ? '—'
 
 let cfg = JSON.parse(JSON.stringify(DEFAULTS));
 let sort = 'score';
+/* classement courant (dans le budget), tenu a jour par render() pour que
+   "Top 3" et "Exporter" travaillent sur ce qui est reellement affiche,
+   sans refaire le classement de leur cote. */
+let currentItems = [];
 
 function el(tag, cls, text) {
   const n = document.createElement(tag);
@@ -53,6 +57,7 @@ function render() {
   document.getElementById('mode').textContent = r.items.length ? r.mode.label : '';
 
   const inBudget = r.items.filter(it => budget == null || (it.price != null && it.price <= budget));
+  currentItems = inBudget;
 
   /* --- bandeau : etat de chaque site --- */
   const summary = document.getElementById('summary');
@@ -185,6 +190,48 @@ document.getElementById('sort').addEventListener('change', e => {
 });
 
 document.getElementById('reload').addEventListener('click', () => load());
+
+/* ---------- ouvrir les meilleures offres d'un coup ---------- */
+document.getElementById('openTop').addEventListener('click', () => {
+  const top = currentItems.slice(0, 3);
+  if (!top.length) return;
+  top.forEach((it, i) => chrome.tabs.create({ url: it.url, active: i === 0 }));
+});
+
+/* ---------- exporter en CSV ---------- */
+function csvCell(v) {
+  const s = String(v == null ? '' : v);
+  return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+}
+
+document.getElementById('exportCsv').addEventListener('click', () => {
+  if (!currentItems.length) return;
+
+  const lignes = [['Site', 'Titre', 'Prix', 'Note', 'Avis/ventes', 'Score', 'Lien'].map(csvCell).join(',')];
+  currentItems.forEach(it => {
+    const meta = RFPRank.SITES_META[it.siteId] || { name: it.siteId };
+    lignes.push([
+      meta.name,
+      it.title,
+      it.price == null ? '' : it.price,
+      it.rating == null ? '' : it.rating,
+      it.reviews == null ? '' : it.reviews,
+      it.score,
+      it.url
+    ].map(csvCell).join(','));
+  });
+
+  /* BOM UTF-8 : sans lui, Excel affiche les accents de travers */
+  const blob = new Blob(['﻿' + lignes.join('\r\n')], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'researchfast-' + (cfg.query ? cfg.query.replace(/[^\w-]+/g, '-').slice(0, 40) : 'resultats') + '.csv';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+});
 
 /* ---------- relancer une recherche depuis cette page ---------- */
 document.getElementById('relance').addEventListener('submit', e => {

@@ -82,24 +82,27 @@ Un compagnon animé qui vit en bas de tes pages.
 <td><img src="ResearchFast.Page/icons/icon128.png" width="64"></td>
 <td>
 
-### ResearchFast.Page · v1.6.0
+### ResearchFast.Page · v1.7.0
 [⬇️ Télécharger](https://scgaming887-svg.github.io/mes-extensions-chrome/downloads/ResearchFast.Page.zip)
 
 Trouve la meilleure offre pour ce que tu cherches.
 
-- Tape ton article : l'extension ouvre la recherche sur **Amazon, eBay, Best Buy et Marketplace** d'un coup
+- Tape ton article : l'extension ouvre la recherche sur **Amazon, eBay, Best Buy, Newegg et Marketplace** d'un coup
 - **Page de comparaison** : une colonne par site, remplie en direct pendant que les onglets se scannent en arrière-plan — plus besoin de les visiter un par un
+- **Top 3 dans des onglets** : ouvre les trois meilleures offres toutes boutiques confondues en un clic, sans repasser par chaque colonne
+- **Export CSV** : télécharge les offres affichées (titre, prix, note, score, lien) pour les comparer ailleurs ou les garder
 - **Barre de recherche intégrée** à la page de comparaison : relance une recherche sans repasser par le popup
 - Elle lit chaque page de résultats et en extrait titre, prix, note et fiabilité
 - **Deux curseurs de prix** — un minimum et un budget maximum, jusqu'à 100 000 $ — avec refiltrage instantané sans rescanner. Ils ne peuvent pas se croiser : celui qu'on ne bouge pas cède
 - **Le classement s'adapte à ton budget** (voir plus bas)
-- **La note veut dire ce qu'elle dit** : Amazon note le produit, eBay note le **vendeur**, Marketplace ne publie rien
+- **La note veut dire ce qu'elle dit** : Amazon, Best Buy et Newegg notent le produit, eBay note le **vendeur**, Marketplace ne publie rien
 - Écarte les accessoires : chercher « casque bluetooth » ne remonte pas les étuis pour casque — mais si la boutique nomme ses produits autrement (« Galaxy A17 » pour un téléphone), rien n'est écarté : le site a déjà fait le tri
 - **Relit la page toute seule** si elle se remplit après coup, comme le font les boutiques qui affichent leurs vignettes en JavaScript
-- Filtres : prix minimum, note minimale, mots à exclure, masquer les sponsorisés
-- Mode générique de secours sur les autres boutiques
+- Filtres : prix minimum, note minimale, mots à exclure, masquer les sponsorisés — **remonter un filtre fait réapparaître les annonces qu'il cachait, sans avoir à rescanner**
+- Mode générique de secours sur les autres boutiques, avec un plafond de lecture pour rester fluide même sur une très grosse page
 - Quand une liste est vide, le panneau **dit pourquoi** : page non reconnue, aucune annonce ne correspond à la recherche, ou tout dépasse le budget
 - Sur Best Buy, la recherche est **tapée dans le champ du site** : son adresse de recherche change sans prévenir, donc on la laisse la fabriquer elle-même
+- Marketplace est provisoirement capricieux côté scan (Facebook change souvent sa page) — en attendant, privilégie les quatre autres boutiques
 
 </td>
 </tr>
@@ -200,6 +203,7 @@ Deux principes derrière ça :
 | Amazon | adresse directe `/s?k=` | .ca · .com · .fr |
 | eBay | adresse directe `_nkw=` | .ca · .com · .fr |
 | Best Buy | adresse directe `/fr-ca/chercher?search=` · repli : saisie dans leur champ | Canada · États-Unis |
+| Newegg | adresse directe `/p/pl?d=` | Canada · États-Unis |
 | Marketplace | adresse directe `/marketplace/search/` | partout |
 | Autres boutiques | bouton 🔎 pour scanner la page affichée | partout |
 
@@ -222,6 +226,7 @@ même vide : une colonne du comparateur ne peut jamais rester bloquée sur « sc
 | Amazon | **le produit** | étoiles et nombre d'avis de la fiche |
 | eBay | **le vendeur** | son % d'avis positifs et son nombre de ventes — 90 % → 0 ★, 100 % → 5 ★ |
 | Best Buy | **le produit** | étoiles et nombre d'avis de la fiche · Canada et États-Unis seulement |
+| Newegg | **le produit** | étoiles (demi-étoiles comprises) et nombre d'avis · Canada et États-Unis seulement |
 | Marketplace | **rien** | Facebook ne publie aucune note sur ses pages de résultats |
 
 Chaque note est étiquetée et colorée selon sa nature, pour ne jamais mélanger « 4,7 ★ produit »

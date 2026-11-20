@@ -15,7 +15,7 @@ const DEFAULTS = {
 /* Les boutiques et leurs adresses de recherche vivent dans rank.js :
    le popup ET la page de comparaison lancent des recherches, il ne doit y
    avoir qu'une seule definition a corriger le jour ou une adresse change. */
-const SITES = ['amazon', 'ebay', 'bestbuy', 'facebook'];
+const SITES = ['amazon', 'ebay', 'bestbuy', 'newegg', 'facebook'];
 const SEARCH = {};
 SITES.forEach(id => {
   const meta = RFPRank.SITES_META[id];
