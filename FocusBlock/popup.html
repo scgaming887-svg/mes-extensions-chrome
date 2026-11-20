@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <header>
+    <span class="logo">🔒</span>
+    <h1>Focus<span>Block</span></h1>
+  </header>
+
+  <section class="pad">
+    <div class="field">
+      <span class="lbl">Choix rapides</span>
+      <div class="sites" id="sites"></div>
+    </div>
+
+    <label class="field">
+      <span class="lbl">Ou tape une adresse (plusieurs possibles, separees par une virgule)</span>
+      <input type="text" id="custom" placeholder="exemple.com, autresite.com">
+    </label>
+
+    <div class="field">
+      <span class="lbl">Pendant combien de temps ?</span>
+      <div class="durations" id="durations"></div>
+      <div class="custom-duration">
+        <input type="number" id="durationValue" min="1" placeholder="Autre">
+        <select id="durationUnit">
+          <option value="minutes">minutes</option>
+          <option value="heures">heures</option>
+          <option value="jours">jours</option>
+        </select>
+      </div>
+    </div>
+
+    <button id="go" class="btn-go">🔒 Bloquer maintenant</button>
+    <p class="msg" id="msg"></p>
+  </section>
+
+  <section class="pad active-section">
+    <h2>Bloqués en ce moment</h2>
+    <div id="active"></div>
+  </section>
+
+  <script src="common.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

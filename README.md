@@ -2,19 +2,19 @@
 
 # Mes extensions Chrome
 
-**GameOpen** · **PageCustomer** · **PetPage** · **ResearchFast.Page**
+**GameOpen** · **PageCustomer** · **PetPage** · **ResearchFast.Page** · **SnapCoach** · **KeySound** · **FocusBlock**
 
-Quatre extensions faites maison, gratuites, sans publicité et sans collecte de données.
+Sept extensions faites maison, gratuites, sans publicité et sans collecte de données.
 
 ### 👉 [**Page de téléchargement**](https://scgaming887-svg.github.io/mes-extensions-chrome/) 👈
 
-*Les quatre y sont, avec un bouton par extension et un pack complet.*
+*Elles y sont toutes, avec un bouton par extension et un pack complet.*
 
 </div>
 
 ---
 
-## Les quatre extensions
+## Les sept extensions
 
 <table>
 <tr>
@@ -154,6 +154,23 @@ Le son de ton clavier, en mieux — pendant que tu tapes sur le web.
 
 ---
 
+### FocusBlock · v1.0.0
+[⬇️ Télécharger](https://scgaming887-svg.github.io/mes-extensions-chrome/downloads/FocusBlock.zip)
+
+Bloque carrément un site, pour la durée que tu choisis.
+
+- **Choix rapides** : YouTube, TikTok, Snapchat, Instagram, Facebook, X/Twitter, Reddit, Netflix — ou tape n'importe quelle adresse (plusieurs à la fois, séparées par une virgule)
+- **Durée libre** : 15 min, 30 min, 1 h, 2 h, 4 h, jusqu'à demain 6 h, ou une valeur à toi en minutes, heures ou jours
+- **Vraiment bloqué** : le site redirige vers une page d'attente avec le temps restant, pas une erreur de navigateur — et retirer un blocage avant l'heure demande une confirmation, pas un simple clic
+- Fonctionne sans connexion ni serveur distant : une règle `declarativeNetRequest` locale, posée par le navigateur lui-même
+- Plusieurs sites à la fois reçoivent la même durée en un seul clic
+- Se débloque tout seul à l'heure prévue, même si l'ordinateur a dormi entre-temps
+- Bloquer un site déjà bloqué repart de maintenant avec la nouvelle durée, au lieu de les additionner
+
+⚠️ Bloque le **domaine entier** (tous les sous-domaines compris) : bloquer `facebook.com` bloque aussi Messenger si tu y accèdes depuis le navigateur.
+
+---
+
 ## Installation
 
 Va sur la **[page de téléchargement](https://scgaming887-svg.github.io/mes-extensions-chrome/)**, prends le `.zip` qui t'intéresse, puis :
@@ -171,7 +188,7 @@ Va sur la **[page de téléchargement](https://scgaming887-svg.github.io/mes-ext
 git clone https://github.com/scgaming887-svg/mes-extensions-chrome.git
 ```
 
-Puis charge directement les dossiers `GameOpen/`, `PageCustomer/`, `PetPage/`, `ResearchFast.Page/`, `SnapCoach/` ou `KeySound/`.
+Puis charge directement les dossiers `GameOpen/`, `PageCustomer/`, `PetPage/`, `ResearchFast.Page/`, `SnapCoach/`, `KeySound/` ou `FocusBlock/`.
 Après chaque modification : bouton ↻ sur `chrome://extensions`, et recharge l'onglet
 pour les trois extensions qui s'injectent dans les pages.
 
@@ -251,17 +268,21 @@ suffisent à le faire passer de repu à « petit creux ». Les sauts qu'il fait 
 ## Structure du dépôt
 
 ```
-GameOpen/            extension 1 — manifest, popup, 6 mini-jeux
-PageCustomer/        extension 2 — manifest, popup, content script
-PetPage/             extension 3 — manifest, popup, compagnon animé
-ResearchFast.Page/   extension 4 — manifest, popup, lecteur de pages de vente,
-                                   page de comparaison, classement partagé
+GameOpen/            manifest, popup, 6 mini-jeux
+PageCustomer/        manifest, popup, content script
+PetPage/             manifest, popup, compagnon animé
+ResearchFast.Page/   manifest, popup, lecteur de pages de vente, page de
+                     comparaison, classement partagé
+SnapCoach/           manifest, popup, coach de conversation
+KeySound/            manifest, popup, sons de clavier
+FocusBlock/          manifest, popup, service worker (blocage declarativeNetRequest),
+                     page affichée à la place du site bloqué
 docs/                la page de téléchargement publiée par GitHub Pages
 publier.bat          met le site à jour en ligne
 PRIVACY.md           politique de confidentialité
 ```
 
-Les quatre extensions sont en **Manifest V3**, sans aucune dépendance ni outil de build :
+Les sept extensions sont en **Manifest V3**, sans aucune dépendance ni outil de build :
 du HTML, du CSS et du JavaScript, lisibles tels quels.
 
 ---
@@ -274,6 +295,9 @@ du HTML, du CSS et du JavaScript, lisibles tels quels.
 | PageCustomer | ✅ | à vérifier |
 | PetPage | ✅ | ✅ |
 | ResearchFast.Page | ✅ | à vérifier |
+| SnapCoach | ✅ | à vérifier |
+| KeySound | ✅ | à vérifier |
+| FocusBlock | ✅ | à vérifier |
 
 Edge est basé sur Chromium : ces extensions s'y chargent de la même façon.
 PetPage y a été confirmée, les autres devraient suivre sans surprise.

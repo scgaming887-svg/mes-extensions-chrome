@@ -1,6 +1,6 @@
-# Politique de confidentialité — GameOpen, PageCustomer, PetPage, ResearchFast.Page, SnapCoach, KeySound
+# Politique de confidentialité — GameOpen, PageCustomer, PetPage, ResearchFast.Page, SnapCoach, KeySound, FocusBlock
 
-*Dernière mise à jour : 24 août 2026*
+*Dernière mise à jour : 20 novembre 2026*
 
 ## Résumé
 
@@ -27,6 +27,7 @@ et ne sont accessibles ni à l'auteur, ni à un tiers.
 | ResearchFast.Page | Ta recherche en cours, tes filtres, et les annonces extraites du dernier scan |
 | KeySound | Ton ambiance, ton volume et la liste des sites que tu as coupés. **Aucune frappe n'est enregistrée** |
 | SnapCoach | Ta clé API si tu en ajoutes une, le modèle et le ton choisis. **Aucune conversation n'est enregistrée** : elle est analysée puis oubliée à la fermeture de l'onglet |
+| FocusBlock | La liste des sites que tu bloques et jusqu'à quand. Effacée automatiquement dès que le blocage se termine |
 
 ## SnapCoach et la connexion à Claude
 
@@ -67,6 +68,19 @@ il lit le **nom** de la touche uniquement pour choisir entre cinq sons
   fabriqués dans le navigateur.
 - Une option permet de **rester muet dans les champs de mot de passe**, et une autre
   de couper le son sur un site précis.
+
+## FocusBlock et les sites bloqués
+
+FocusBlock **ne lit jamais le contenu d'aucune page** : il ne demande même pas la
+permission de le faire. Le blocage passe entièrement par la fonction
+`declarativeNetRequest` de Chrome, qui compare l'adresse visitée à ta liste de
+sites bloqués **à l'intérieur du navigateur lui-même** — l'extension ne voit ni
+n'intercepte le trafic. Quand une adresse correspond, Chrome affiche directement
+la page d'attente de l'extension à la place.
+
+Aucune requête réseau n'est émise, et rien n'est transmis nulle part : la liste
+des sites bloqués et l'heure de fin restent dans le stockage local du navigateur,
+et sont supprimées dès que le blocage expire.
 
 ## Accès aux pages web
 
