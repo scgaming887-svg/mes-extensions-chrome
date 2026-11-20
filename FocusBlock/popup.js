@@ -163,19 +163,30 @@ document.getElementById('go').addEventListener('click', async () => {
   const btn = document.getElementById('go');
   btn.disabled = true;
 
+  /* on note les echecs au lieu de les avaler : un site mal blogue sans
+     message est pire qu'une erreur, l'utilisateur croit etre protege */
+  const echecs = [];
   for (const domain of domains) {
-    await send({ action: 'addBlock', domain, label: FBCommon.labelFor(domain), durationMs: state.durationMs });
+    const res = await send({ action: 'addBlock', domain, label: FBCommon.labelFor(domain), durationMs: state.durationMs });
+    if (!res || !res.ok) echecs.push(domain);
   }
 
   btn.disabled = false;
   state.selectedSites.clear();
   document.getElementById('custom').value = '';
   renderSites();
+  renderActive();
+
+  if (echecs.length === domains.size) {
+    flash('Échec du blocage (' + echecs.join(', ') + '). Recharge l\'extension depuis chrome://extensions.', true);
+    return;
+  }
 
   const until = Date.now() + state.durationMs;
-  const n = domains.size;
-  flash((n > 1 ? n + ' sites bloqués' : '1 site bloqué') + ' jusqu\'à ' + FBCommon.formatClock(until) + '.');
-  renderActive();
+  const n = domains.size - echecs.length;
+  let msg = (n > 1 ? n + ' sites bloqués' : '1 site bloqué') + ' jusqu\'à ' + FBCommon.formatClock(until) + '.';
+  if (echecs.length) msg += ' (échec pour ' + echecs.join(', ') + ')';
+  flash(msg, !!echecs.length);
 });
 
 document.getElementById('custom').addEventListener('keydown', e => {

@@ -154,7 +154,7 @@ Le son de ton clavier, en mieux — pendant que tu tapes sur le web.
 
 ---
 
-### FocusBlock · v1.0.0
+### FocusBlock · v1.0.1
 [⬇️ Télécharger](https://scgaming887-svg.github.io/mes-extensions-chrome/downloads/FocusBlock.zip)
 
 Bloque carrément un site, pour la durée que tu choisis.
